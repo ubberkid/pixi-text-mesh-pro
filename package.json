@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "TextMeshPro-style rich text rendering for PixiJS v8 — SDF effects, inline sprites, per-character animation",
   "type": "module",
+  "main": "./src/index.ts",
   "scripts": {
     "dev": "vite examples",
     "build": "vite build && tsc --emitDeclarationOnly",

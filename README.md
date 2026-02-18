@@ -20,9 +20,7 @@ Unity TextMeshPro-style rich text rendering for **PixiJS v8** — SDF/MSDF effec
 ## Installation
 
 ```bash
-git clone https://github.com/ubberkid/pixi-text-mesh-pro.git
-cd pixi-text-mesh-pro
-npm install
+npm install github:ubberkid/pixi-text-mesh-pro
 ```
 
 **Requires:** `pixi.js` ^8.0.0
