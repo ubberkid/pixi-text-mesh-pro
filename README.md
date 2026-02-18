@@ -1,7 +1,6 @@
 # pixi-text-mesh-pro
 
-[![npm version](https://img.shields.io/npm/v/pixi-text-mesh-pro.svg)](https://www.npmjs.com/package/pixi-text-mesh-pro)
-[![license](https://img.shields.io/npm/l/pixi-text-mesh-pro.svg)](https://github.com/ubberkid/pixi-text-mesh-pro/blob/main/LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ubberkid/pixi-text-mesh-pro/blob/main/LICENSE)
 
 Unity TextMeshPro-style rich text rendering for **PixiJS v8** — SDF/MSDF effects, inline sprites, per-character animation, and a full rich text tag parser.
 
@@ -21,10 +20,12 @@ Unity TextMeshPro-style rich text rendering for **PixiJS v8** — SDF/MSDF effec
 ## Installation
 
 ```bash
-npm install pixi-text-mesh-pro
+git clone https://github.com/ubberkid/pixi-text-mesh-pro.git
+cd pixi-text-mesh-pro
+npm install
 ```
 
-**Peer dependency:** `pixi.js` ^8.0.0
+**Requires:** `pixi.js` ^8.0.0
 
 ## Quick Start
 
