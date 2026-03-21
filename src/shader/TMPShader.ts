@@ -126,6 +126,8 @@ export class TMPShader extends Shader {
         u.uBevelWidth = style.bevelWidth;
         u.uBevelOffset = style.bevelOffset;
         setColorUniform(u.uBevelColor as Float32Array, style.bevelColor, style.bevelAlpha);
+
+        u.uSharpness = style.sharpness;
     }
 
     /**
