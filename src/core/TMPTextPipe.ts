@@ -272,7 +272,10 @@ export class TMPTextPipe {
         const worldScale = (Math.abs(dx) + Math.abs(dy)) / 2;
         const fontScale = font.renderedFontSize / tmpText.style.fontSize;
         const dfRange = font.distanceField?.range ?? 0;
-        const distance = worldScale * dfRange * (1 / fontScale);
+        // Multiply by renderer resolution to account for DPR —
+        // groupTransform doesn't include it, but the GPU renders at that density.
+        const resolution = this._renderer.resolution;
+        const distance = worldScale * dfRange * (1 / fontScale) * resolution;
 
         const u = shader.resources.localUniforms.uniforms;
         u.uDistance = distance;
