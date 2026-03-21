@@ -271,14 +271,21 @@ export class TMPTextPipe {
                 const shadowTint = ((shadowColor >> 16) & 0xff) << 16
                     | ((shadowColor >> 8) & 0xff) << 8
                     | (shadowColor & 0xff);
-                const fontSize = style.fontSize;
-                const sx = style.shadowOffsetX * fontSize * 0.05;
-                const sy = style.shadowOffsetY * fontSize * 0.05;
+                const baseFontSize = style.fontSize;
+                const baseSx = style.shadowOffsetX * baseFontSize * 0.05;
+                const baseSy = style.shadowOffsetY * baseFontSize * 0.05;
 
                 for (const i of charIndices) {
                     if (maxChars >= 0 && i >= maxChars) break;
                     const charInfo = textInfo.characterInfo[i];
                     if (!charInfo.isVisible || !charInfo.texture) continue;
+
+                    // Scale shadow offset per character for <size> tags
+                    const charScale = charInfo.scale ?? 1;
+                    const baseScale = baseFontSize / (font?.renderedFontSize ?? baseFontSize);
+                    const relScale = baseScale > 0 ? charScale / baseScale : 1;
+                    const sx = baseSx * relScale;
+                    const sy = baseSy * relScale;
 
                     context.texture(
                         charInfo.texture,
