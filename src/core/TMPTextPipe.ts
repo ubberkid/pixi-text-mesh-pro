@@ -144,13 +144,13 @@ export class TMPTextPipe {
         return proxyMap;
     }
 
-    /** Get existing proxy map from _gpuData (returns null if GC'd or not yet created). */
-    private _getProxyMap(tmpText: TMPText): Map<string, TMPTextGraphics> | null {
+    /** Get existing proxy map from _gpuData (returns undefined if GC'd or not yet created). */
+    private _getProxyMap(tmpText: TMPText): Map<string, TMPTextGraphics> | undefined {
         const wrapper = tmpText._gpuData[this._renderer.uid] as
             | { _map: Map<string, TMPTextGraphics> }
             | null
             | undefined;
-        return wrapper?._map ?? null;
+        return wrapper?._map;
     }
 
     private _getOrCreateProxy(
