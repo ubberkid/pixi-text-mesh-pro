@@ -128,47 +128,51 @@ export class TMPTextPipe {
      * keep the proxy alive via TMPText._onTouch() propagation.
      */
     private _getProxies(tmpText: TMPText): Map<string, TMPTextGraphics> {
-        let proxyMap = this._getProxyMap(tmpText);
-        if (!proxyMap) {
-            proxyMap = new Map();
-            const wrapper = {
-                _map: proxyMap,
-                _onTouch(now: number) {
-                    for (const proxy of proxyMap.values()) {
-                        // Must touch both the proxy AND its context —
-                        // Graphics._onTouch does both, and the GC system
-                        // tracks them independently.
-                        (proxy as unknown as { _gcLastUsed: number })._gcLastUsed = now;
-                        (proxy.context as unknown as { _gcLastUsed: number })._gcLastUsed = now;
-                    }
-                },
-                destroy() {
-                    for (const proxy of proxyMap.values()) {
-                        proxy.destroy();
-                    }
-                    proxyMap.clear();
-                },
-            };
-            tmpText._gpuData[this._renderer.uid] = wrapper;
-            // Register with GC so updateRenderableGCTick → _onTouch is
-            // called periodically, propagating to proxy _gcLastUsed.
-            if (!this._managedItems[tmpText.uid]) {
-                this._managedItems[tmpText.uid] = tmpText;
-                (tmpText as unknown as { _gcLastUsed: number })._gcLastUsed = performance.now();
-            }
-            // Force initial context build
-            tmpText._didTextUpdate = true;
+        const existing = this._getProxyMap(tmpText);
+        if (existing) return existing;
+
+        return this._initProxies(tmpText);
+    }
+
+    private _initProxies(tmpText: TMPText): Map<string, TMPTextGraphics> {
+        const proxyMap = new Map<string, TMPTextGraphics>();
+        const wrapper = {
+            _map: proxyMap,
+            _onTouch(now: number) {
+                for (const proxy of proxyMap.values()) {
+                    // Must touch both the proxy AND its context —
+                    // Graphics._onTouch does both, and the GC system
+                    // tracks them independently.
+                    (proxy as unknown as { _gcLastUsed: number })._gcLastUsed = now;
+                    (proxy.context as unknown as { _gcLastUsed: number })._gcLastUsed = now;
+                }
+            },
+            destroy() {
+                for (const proxy of proxyMap.values()) {
+                    proxy.destroy();
+                }
+                proxyMap.clear();
+            },
+        };
+        tmpText._gpuData[this._renderer.uid] = wrapper;
+        // Register with GC so updateRenderableGCTick → _onTouch is
+        // called periodically, propagating to proxy _gcLastUsed.
+        if (!this._managedItems[tmpText.uid]) {
+            this._managedItems[tmpText.uid] = tmpText;
+            (tmpText as unknown as { _gcLastUsed: number })._gcLastUsed = performance.now();
         }
+        // Force initial context build
+        tmpText._didTextUpdate = true;
         return proxyMap;
     }
 
-    /** Get existing proxy map from _gpuData (returns undefined if GC'd or not yet created). */
-    private _getProxyMap(tmpText: TMPText): Map<string, TMPTextGraphics> | undefined {
-        const wrapper = tmpText._gpuData[this._renderer.uid] as
+    /** Get existing proxy map from _gpuData (returns null if GC'd or not yet created). */
+    private _getProxyMap(tmpText: TMPText): Map<string, TMPTextGraphics> | null {
+        const wrapper = tmpText._gpuData?.[this._renderer?.uid] as
             | { _map: Map<string, TMPTextGraphics> }
             | null
             | undefined;
-        return wrapper?._map;
+        return wrapper?._map ?? null;
     }
 
     private _getOrCreateProxy(
