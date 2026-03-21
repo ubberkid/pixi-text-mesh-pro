@@ -135,7 +135,11 @@ export class TMPTextPipe {
                 _map: proxyMap,
                 _onTouch(now: number) {
                     for (const proxy of proxyMap.values()) {
+                        // Must touch both the proxy AND its context —
+                        // Graphics._onTouch does both, and the GC system
+                        // tracks them independently.
                         (proxy as unknown as { _gcLastUsed: number })._gcLastUsed = now;
+                        (proxy.context as unknown as { _gcLastUsed: number })._gcLastUsed = now;
                     }
                 },
                 destroy() {
