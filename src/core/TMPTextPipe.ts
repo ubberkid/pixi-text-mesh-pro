@@ -59,7 +59,17 @@ export class TMPTextPipe {
     validateRenderable(tmpText: TMPText): boolean {
         const proxyMap = this._getProxies(tmpText);
         const proxy = this._getOrCreateProxy(proxyMap, '');
-        return this._renderer.renderPipes.graphics.validateRenderable(proxy);
+        const needsRebuild = this._renderer.renderPipes.graphics.validateRenderable(proxy);
+
+        if (needsRebuild) {
+            // Force context rebuild so _updateContexts runs in addRenderable.
+            // Without this, the graphics pipe's GPU data gets cleared but
+            // never rebuilt because the cached instruction set doesn't
+            // re-trigger addRenderable with _didTextUpdate = true.
+            tmpText._didTextUpdate = true;
+        }
+
+        return needsRebuild;
     }
 
     addRenderable(tmpText: TMPText, instructionSet: InstructionSet): void {
