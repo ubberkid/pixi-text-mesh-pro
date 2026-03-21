@@ -49,8 +49,6 @@ export class TMPTextPipe {
     };
 
     private _renderer: Renderer;
-    /** Map from TMPText to { materialName -> TMPTextGraphics proxy }. */
-    private _gpuMap = new WeakMap<TMPText, Map<string, TMPTextGraphics>>();
 
     constructor(renderer: Renderer) {
         this._renderer = renderer;
@@ -76,26 +74,14 @@ export class TMPTextPipe {
         const proxyMap = this._getProxies(tmpText);
 
         if (tmpText._didTextUpdate) {
+            tmpText._didTextUpdate = false;
             if (tmpText._didVerticesUpdate) {
                 tmpText._didVerticesUpdate = false;
             }
+            this._updateContexts(tmpText, proxyMap);
         }
 
-        // Always rebuild contexts: detached proxy Graphics can have their
-        // GPU batches cleared by PixiJS's internal systems (GC, instruction
-        // set rebuilds). Since the proxy isn't in the scene graph, the normal
-        // dirty/validate cycle doesn't reliably keep it alive.
-        tmpText._didTextUpdate = false;
-        this._updateContexts(tmpText, proxyMap);
-
-        const now = performance.now();
-
         for (const [materialName, proxy] of proxyMap) {
-            // Keep proxy alive: it's not in the scene graph, so PixiJS's
-            // RenderableGCSystem won't update _lastUsed automatically.
-            // Without this, the proxy gets GC'd after 60 seconds.
-            (proxy as unknown as { _lastUsed: number })._lastUsed = now;
-
             syncWithProxy(tmpText, proxy);
             this._renderer.renderPipes.graphics.addRenderable(proxy, instructionSet);
 
@@ -106,7 +92,7 @@ export class TMPTextPipe {
     }
 
     updateRenderable(tmpText: TMPText): void {
-        const proxyMap = this._gpuMap.get(tmpText);
+        const proxyMap = this._getProxyMap(tmpText);
         if (!proxyMap) return;
         for (const [materialName, proxy] of proxyMap) {
             syncWithProxy(tmpText, proxy);
@@ -119,22 +105,52 @@ export class TMPTextPipe {
     }
 
     destroyRenderable(tmpText: TMPText): void {
-        const proxyMap = this._gpuMap.get(tmpText);
+        const proxyMap = this._getProxyMap(tmpText);
         if (proxyMap) {
             for (const proxy of proxyMap.values()) {
                 proxy.destroy();
             }
-            this._gpuMap.delete(tmpText);
+            tmpText._gpuData[this._renderer.uid] = null;
         }
     }
 
+    /**
+     * Get or create the proxy map, stored on tmText._gpuData[renderer.uid].
+     * This follows the BitmapTextPipe pattern so PixiJS's GC system can
+     * keep the proxy alive via TMPText._onTouch() propagation.
+     */
     private _getProxies(tmpText: TMPText): Map<string, TMPTextGraphics> {
-        let proxyMap = this._gpuMap.get(tmpText);
+        let proxyMap = this._getProxyMap(tmpText);
         if (!proxyMap) {
             proxyMap = new Map();
-            this._gpuMap.set(tmpText, proxyMap);
+            const wrapper = {
+                _map: proxyMap,
+                _onTouch(now: number) {
+                    for (const proxy of proxyMap.values()) {
+                        (proxy as unknown as { _gcLastUsed: number })._gcLastUsed = now;
+                    }
+                },
+                destroy() {
+                    for (const proxy of proxyMap.values()) {
+                        proxy.destroy();
+                    }
+                    proxyMap.clear();
+                },
+            };
+            tmpText._gpuData[this._renderer.uid] = wrapper;
+            // Force initial context build
+            tmpText._didTextUpdate = true;
         }
         return proxyMap;
+    }
+
+    /** Get existing proxy map from _gpuData (returns null if GC'd or not yet created). */
+    private _getProxyMap(tmpText: TMPText): Map<string, TMPTextGraphics> | null {
+        const wrapper = tmpText._gpuData[this._renderer.uid] as
+            | { _map: Map<string, TMPTextGraphics> }
+            | null
+            | undefined;
+        return wrapper?._map ?? null;
     }
 
     private _getOrCreateProxy(

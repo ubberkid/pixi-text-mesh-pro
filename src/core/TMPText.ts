@@ -43,6 +43,8 @@ export class TMPText extends ViewContainer {
     _didTextUpdate = true;
     /** @internal */
     override _roundPixels: 0 | 1 = 0;
+    /** @internal Per-renderer GPU data (proxy Graphics), matching BitmapText pattern. */
+    _gpuData: Record<number, { _onTouch?: (now: number) => void; destroy: () => void } | null> = Object.create(null);
 
     private _text = '';
     private _style: TMPTextStyle;
@@ -64,6 +66,18 @@ export class TMPText extends ViewContainer {
 
     /** @internal Flag for vertex-only updates (no re-layout). */
     _didVerticesUpdate = false;
+
+    /**
+     * @internal Called by PixiJS GC system to mark this renderable as in-use.
+     * Propagates to proxy Graphics stored in _gpuData so the graphics pipe's
+     * GCManagedHash doesn't destroy their GPU batches.
+     */
+    _onTouch(now: number): void {
+        (this as unknown as { _gcLastUsed: number })._gcLastUsed = now;
+        for (const key in this._gpuData) {
+            this._gpuData[key]?._onTouch?.(now);
+        }
+    }
 
     constructor(options: TMPTextOptions) {
         super({});
