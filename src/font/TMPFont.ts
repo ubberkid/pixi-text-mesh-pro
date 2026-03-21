@@ -1,6 +1,7 @@
 import { AbstractBitmapFont, Texture, Rectangle } from 'pixi.js';
 import type { CharData } from 'pixi.js';
 import type { TMPFontData, TMPFontDataSpriteSheet } from './TMPFontData';
+import type { UnityTMPData } from './UnityTMPData';
 
 /**
  * TMPFont extends PixiJS's AbstractBitmapFont with sprite sheet data for <sprite> tags
@@ -171,6 +172,128 @@ export class TMPFont extends AbstractBitmapFont<TMPFont> {
         // Sprite sheets
         font.spriteSheets = data.spriteSheets ?? [];
         font.fallbackFonts = data.fallbackFonts ?? [];
+
+        return font;
+    }
+
+    /**
+     * Create a TMPFont from Unity TextMeshPro font data + atlas textures.
+     *
+     * Handles all Unity → PixiJS conversion:
+     * - Y-flip (Unity bottom-left origin → PixiJS top-left)
+     * - Glyph rect expansion by atlas padding (Unity stores tight bounds,
+     *   but PixiJS needs the SDF spread included in the texture frame)
+     * - Offset calculation from Unity bearings to BMFont-style offsets
+     * - Render mode → distance field type mapping
+     */
+    static fromUnityData(data: UnityTMPData, pageTextures: Texture[]): TMPFont {
+        const font = new TMPFont();
+        const face = data.faceInfo;
+        const atlas = data.atlas;
+
+        // Font info
+        font._setFontInfo(face.familyName, face.lineHeight, face.pointSize, face.ascentLine);
+        (font.fontMetrics as { fontSize: number }).fontSize = face.pointSize;
+        (font.fontMetrics as { ascent: number }).ascent = face.ascentLine;
+        (font.fontMetrics as { descent: number }).descent = face.descentLine;
+        font.baseRenderedFontSize = face.pointSize;
+
+        // Distance field: _GradientScale = padding + 1 (packingModifier for SDF)
+        const isSDF = atlas.renderMode >= 4165 && atlas.renderMode <= 4169;
+        const range = atlas.padding + 1;
+        (font as { distanceField: { type: string; range: number } }).distanceField = {
+            type: isSDF ? 'sdf' : 'none',
+            range,
+        };
+        font.applyFillAsTint = true;
+
+        // Pages
+        for (let i = 0; i < pageTextures.length; i++) {
+            (font.pages as { texture: Texture }[]).push({ texture: pageTextures[i] });
+        }
+
+        // Build glyph lookup: glyphIndex → glyph data
+        const glyphMap = new Map<number, (typeof data.glyphTable)[0]>();
+        for (const g of data.glyphTable) {
+            glyphMap.set(g.index, g);
+        }
+
+        // Process characters
+        const pad = atlas.padding;
+        const base = face.ascentLine;
+
+        for (const ch of data.characterTable) {
+            const g = glyphMap.get(ch.glyphIndex);
+            if (!g) continue;
+
+            const pageTexture = pageTextures[g.atlasIndex];
+            if (!pageTexture) continue;
+
+            const charStr = String.fromCodePoint(ch.unicode);
+            const rect = g.glyphRect;
+
+            // Expand glyph rect by padding to include SDF spread data.
+            // Unity stores tight bounds; the SDF distance field extends
+            // into the atlas padding area between packed glyphs.
+            const expX = Math.max(0, rect.x - pad);
+            const expY = Math.max(0, rect.y - pad);
+            const expR = Math.min(atlas.width, rect.x + rect.width + pad);
+            const expT = Math.min(atlas.height, rect.y + rect.height + pad);
+            const expW = expR - expX;
+            const expH = expT - expY;
+
+            // Actual padding applied per side (may be less at atlas edges)
+            const padLeft = rect.x - expX;
+            const padTop = expT - (rect.y + rect.height);
+
+            // Flip Y: Unity bottom-left → PixiJS top-left
+            const flippedY = atlas.height - expY - expH;
+
+            // BMFont-style offsets, compensating for the expanded padding
+            const xOffset = g.metrics.horizontalBearingX - padLeft;
+            const yOffset = base - g.metrics.horizontalBearingY - padTop;
+
+            const texture = new Texture({
+                source: pageTexture.source,
+                frame: new Rectangle(expX, flippedY, expW, expH),
+            });
+
+            (font.chars as Record<string, unknown>)[charStr] = {
+                id: ch.unicode,
+                xOffset,
+                yOffset,
+                xAdvance: g.metrics.horizontalAdvance,
+                kerning: {} as Record<string, number>,
+                texture,
+            };
+        }
+
+        // Kerning
+        if (data.kerningTable) {
+            for (const k of data.kerningTable) {
+                const secondChar = String.fromCodePoint(k.second);
+                const charData = font.chars[secondChar];
+                if (charData) {
+                    charData.kerning[String.fromCodePoint(k.first)] = k.amount;
+                }
+            }
+        }
+
+        // Font metric fields
+        font.capLine = face.capLine;
+        font.meanLine = face.meanLine;
+        font.superscriptOffset = face.superscriptOffset;
+        font.superscriptSize = face.superscriptSize;
+        font.subscriptOffset = face.subscriptOffset;
+        font.subscriptSize = face.subscriptSize;
+        font.underlineOffset = face.underlineOffset;
+        font.underlineThickness = face.underlineThickness;
+        font.strikethroughOffset = face.strikethroughOffset;
+        font.strikethroughThickness = face.strikethroughThickness;
+        font.tabWidth = face.tabWidth;
+        font.fontScale = face.scale;
+        font.boldStyle = data.boldStyle ?? 0.75;
+        font.boldSpacing = data.boldSpacing ?? 7;
 
         return font;
     }

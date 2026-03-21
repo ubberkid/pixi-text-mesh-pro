@@ -20,6 +20,7 @@ export type {
 // Font
 export { TMPFont } from './font/TMPFont';
 export { loadTMPFont } from './font/TMPFontLoader';
+export { loadUnityTMPFont } from './font/UnityTMPFontLoader';
 export type {
     TMPFontData,
     TMPFontDataGlyph,
@@ -30,6 +31,13 @@ export type {
     TMPFontDataSpriteSheet,
     TMPFontDataSpriteGlyph,
 } from './font/TMPFontData';
+export type {
+    UnityTMPData,
+    UnityTMPFaceInfo,
+    UnityTMPGlyph,
+    UnityTMPCharacter,
+    UnityTMPAtlasInfo,
+} from './font/UnityTMPData';
 
 // Parser
 export { RichTextParser } from './parser/RichTextParser';
