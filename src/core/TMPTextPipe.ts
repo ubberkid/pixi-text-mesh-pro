@@ -10,15 +10,10 @@ import type { TMPText } from './TMPText';
 
 /**
  * Proxy Graphics subclass that cleans up its custom shader on destroy.
+ * Inherits _onTouch from Graphics which touches both _gcLastUsed AND
+ * context._gcLastUsed, keeping both alive in the GC system.
  */
 class TMPTextGraphics extends Graphics {
-    /** @internal Track when last used for GC. */
-    _gcLastUsed = -1;
-
-    _onTouch(now: number): void {
-        this._gcLastUsed = now;
-    }
-
     destroy(): void {
         if (this.context.customShader) {
             this.context.customShader.destroy();
@@ -168,7 +163,7 @@ export class TMPTextPipe {
 
     /** Get existing proxy map from _gpuData (returns null if GC'd or not yet created). */
     private _getProxyMap(tmpText: TMPText): Map<string, TMPTextGraphics> | null {
-        const wrapper = tmpText._gpuData?.[this._renderer?.uid] as
+        const wrapper = tmpText._gpuData[this._renderer.uid] as
             | { _map: Map<string, TMPTextGraphics> }
             | null
             | undefined;
