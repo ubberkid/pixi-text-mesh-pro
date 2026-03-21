@@ -76,12 +76,17 @@ export class TMPTextPipe {
         const proxyMap = this._getProxies(tmpText);
 
         if (tmpText._didTextUpdate) {
-            tmpText._didTextUpdate = false;
             if (tmpText._didVerticesUpdate) {
                 tmpText._didVerticesUpdate = false;
             }
-            this._updateContexts(tmpText, proxyMap);
         }
+
+        // Always rebuild contexts: detached proxy Graphics can have their
+        // GPU batches cleared by PixiJS's internal systems (GC, instruction
+        // set rebuilds). Since the proxy isn't in the scene graph, the normal
+        // dirty/validate cycle doesn't reliably keep it alive.
+        tmpText._didTextUpdate = false;
+        this._updateContexts(tmpText, proxyMap);
 
         const now = performance.now();
 
