@@ -49,9 +49,17 @@ export class TMPTextPipe {
     };
 
     private _renderer: Renderer;
+    private _managedItems: Record<number, TMPText | null>;
 
     constructor(renderer: Renderer) {
         this._renderer = renderer;
+        // Register a managed hash with the GC system so it periodically
+        // calls updateRenderableGCTick → _onTouch on tracked TMPTexts,
+        // which propagates to proxy Graphics keeping them alive.
+        this._managedItems = Object.create(null);
+        (renderer as unknown as { gc: {
+            addResourceHash: (ctx: unknown, hash: string, type: string, priority: number) => void;
+        } }).gc.addResourceHash(this, '_managedItems', 'renderable', -2);
     }
 
     validateRenderable(tmpText: TMPText): boolean {
@@ -138,6 +146,12 @@ export class TMPTextPipe {
                 },
             };
             tmpText._gpuData[this._renderer.uid] = wrapper;
+            // Register with GC so updateRenderableGCTick → _onTouch is
+            // called periodically, propagating to proxy _gcLastUsed.
+            if (!this._managedItems[tmpText.uid]) {
+                this._managedItems[tmpText.uid] = tmpText;
+                (tmpText as unknown as { _gcLastUsed: number })._gcLastUsed = performance.now();
+            }
             // Force initial context build
             tmpText._didTextUpdate = true;
         }
@@ -381,6 +395,7 @@ export class TMPTextPipe {
     }
 
     destroy(): void {
+        this._managedItems = Object.create(null);
         this._renderer = null!;
     }
 }
