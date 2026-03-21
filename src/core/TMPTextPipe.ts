@@ -73,7 +73,14 @@ export class TMPTextPipe {
             this._updateContexts(tmpText, proxyMap);
         }
 
+        const now = performance.now();
+
         for (const [materialName, proxy] of proxyMap) {
+            // Keep proxy alive: it's not in the scene graph, so PixiJS's
+            // RenderableGCSystem won't update _lastUsed automatically.
+            // Without this, the proxy gets GC'd after 60 seconds.
+            (proxy as unknown as { _lastUsed: number })._lastUsed = now;
+
             syncWithProxy(tmpText, proxy);
             this._renderer.renderPipes.graphics.addRenderable(proxy, instructionSet);
 
