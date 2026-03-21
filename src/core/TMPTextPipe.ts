@@ -192,10 +192,13 @@ export class TMPTextPipe {
         const textInfo = tmpText.textInfo;
         if (!textInfo) return;
 
-        // Group character indices by material name
+        // Group character indices by material name.
+        // Sprites go into a special '__sprites__' group rendered without SDF shader.
+        const SPRITE_GROUP = '__sprites__';
         const materialGroups = new Map<string, number[]>();
         for (let i = 0; i < textInfo.characterCount; i++) {
-            const mat = textInfo.characterInfo[i].material || '';
+            const charInfo = textInfo.characterInfo[i];
+            const mat = charInfo.elementType === 'sprite' ? SPRITE_GROUP : (charInfo.material || '');
             let group = materialGroups.get(mat);
             if (!group) {
                 group = [];
@@ -237,8 +240,9 @@ export class TMPTextPipe {
             const { context } = proxy;
             context.clear();
 
-            // Set up SDF shader
-            if (dfType !== 'none' && !context.customShader) {
+            // Set up SDF shader (skip for sprites — they render as regular textures)
+            const isSprites = materialName === SPRITE_GROUP;
+            if (!isSprites && dfType !== 'none' && !context.customShader) {
                 context.customShader = new TMPShader(maxTextures);
             }
 
@@ -262,7 +266,7 @@ export class TMPTextPipe {
             // Done as geometry rather than in the fragment shader because the
             // batch pipeline can't re-sample the SDF texture at offset UVs.
             const style = tmpText.style;
-            const hasShadow = materialName === '' && (
+            const hasShadow = !isSprites && materialName === '' && (
                 style.shadowDilate > 0 || style.shadowOffsetX !== 0 || style.shadowOffsetY !== 0
             );
 
