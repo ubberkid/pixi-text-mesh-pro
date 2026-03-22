@@ -34,22 +34,28 @@ export interface UnityTMPFaceInfo {
     tabWidth: number;
 }
 
+/** Glyph metrics shared by both font glyphs and sprite glyphs. */
+export interface UnityTMPGlyphMetrics {
+    width: number;
+    height: number;
+    horizontalBearingX: number;
+    horizontalBearingY: number;
+    horizontalAdvance: number;
+}
+
+/** Glyph rect (position and size in atlas texture). */
+export interface UnityTMPGlyphRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 /** Per-glyph data from Unity's m_GlyphTable entries. */
 export interface UnityTMPGlyph {
     index: number;
-    metrics: {
-        width: number;
-        height: number;
-        horizontalBearingX: number;
-        horizontalBearingY: number;
-        horizontalAdvance: number;
-    };
-    glyphRect: {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-    };
+    metrics: UnityTMPGlyphMetrics;
+    glyphRect: UnityTMPGlyphRect;
     scale: number;
     atlasIndex: number;
 }
@@ -80,4 +86,50 @@ export interface UnityTMPData {
     boldSpacing?: number;
     /** Atlas page filenames relative to the JSON file (e.g. ["dimbo-sdf-atlas.png"]). */
     pages: string[];
+}
+
+// ---- Sprite Asset Types ----
+
+/** Sprite character entry from Unity's m_SpriteCharacterTable. */
+export interface UnityTMPSpriteCharacter {
+    name: string;
+    glyphIndex: number;
+    scale: number;
+}
+
+/** Sprite glyph entry from Unity's sprite m_GlyphTable. */
+export interface UnityTMPSpriteGlyph {
+    index: number;
+    metrics: UnityTMPGlyphMetrics;
+    glyphRect: UnityTMPGlyphRect;
+}
+
+/** Sprite asset face info (often all zeros — falls back to font's face info). */
+export interface UnityTMPSpriteFaceInfo {
+    pointSize: number;
+    scale: number;
+    lineHeight: number;
+    ascentLine: number;
+    capLine: number;
+    meanLine: number;
+    baseline: number;
+    descentLine: number;
+}
+
+/** Sprite atlas reference. */
+export interface UnityTMPSpriteAtlasInfo {
+    file: string;
+    width: number;
+    height: number;
+}
+
+/**
+ * Top-level structure for extracted Unity TMP sprite asset data.
+ * Mirrors Unity's TMP_SpriteAsset structure.
+ */
+export interface UnityTMPSpriteAssetData {
+    faceInfo: UnityTMPSpriteFaceInfo;
+    atlas: UnityTMPSpriteAtlasInfo;
+    spriteCharacterTable: UnityTMPSpriteCharacter[];
+    spriteGlyphTable: UnityTMPSpriteGlyph[];
 }

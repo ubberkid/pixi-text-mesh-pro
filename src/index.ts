@@ -35,8 +35,15 @@ export type {
     UnityTMPData,
     UnityTMPFaceInfo,
     UnityTMPGlyph,
+    UnityTMPGlyphMetrics,
+    UnityTMPGlyphRect,
     UnityTMPCharacter,
     UnityTMPAtlasInfo,
+    UnityTMPSpriteAssetData,
+    UnityTMPSpriteCharacter,
+    UnityTMPSpriteGlyph,
+    UnityTMPSpriteFaceInfo,
+    UnityTMPSpriteAtlasInfo,
 } from './font/UnityTMPData';
 
 // Parser
