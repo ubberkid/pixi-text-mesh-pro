@@ -540,7 +540,14 @@ export class TMPLayoutEngine {
                 const w = texture ? texture.orig.width * totalCharScale + boldExpand : 0;
                 const h = texture ? texture.orig.height * totalCharScale + boldExpand : 0;
                 const xOff = charData.xOffset * totalCharScale - boldExpand * 0.5;
-                const yOff = (charData.yOffset + effectiveVOffset) * totalCharScale - boldExpand * 0.5;
+                // Fixed baseline: the baseline position (base * baseScale) is constant
+                // for all characters on the line. Only the bearing scales per-character.
+                // yOffset = base - bearingY in BMFont convention.
+                // Corrected: yOff = base * (baseScale - charScale) + yOffset * charScale
+                const baseScale = style.fontSize / baseFontSize;
+                const yOff = baseOffset * (baseScale - totalCharScale)
+                    + (charData.yOffset + effectiveVOffset) * totalCharScale
+                    - boldExpand * 0.5;
 
                 const ci = createCharacterInfo(
                     i, pc, texture, charScale,
