@@ -20,7 +20,7 @@ export type {
 // Font
 export { TMPFont } from './font/TMPFont';
 export { loadTMPFont } from './font/TMPFontLoader';
-export { loadUnityTMPFont } from './font/UnityTMPFontLoader';
+export { loadTMPFontAsset } from './font/TMPFontAssetLoader';
 export type {
     TMPFontData,
     TMPFontDataGlyph,
@@ -32,19 +32,19 @@ export type {
     TMPFontDataSpriteGlyph,
 } from './font/TMPFontData';
 export type {
-    UnityTMPData,
-    UnityTMPFaceInfo,
-    UnityTMPGlyph,
-    UnityTMPGlyphMetrics,
-    UnityTMPGlyphRect,
-    UnityTMPCharacter,
-    UnityTMPAtlasInfo,
-    UnityTMPSpriteAssetData,
-    UnityTMPSpriteCharacter,
-    UnityTMPSpriteGlyph,
-    UnityTMPSpriteFaceInfo,
-    UnityTMPSpriteAtlasInfo,
-} from './font/UnityTMPData';
+    TMPFontAssetData,
+    TMPFaceInfo,
+    TMPAssetGlyph,
+    TMPGlyphMetrics,
+    TMPGlyphRect,
+    TMPAssetCharacter,
+    TMPAtlasInfo,
+    TMPSpriteAssetData,
+    TMPSpriteCharacter,
+    TMPSpriteGlyph,
+    TMPSpriteFaceInfo,
+    TMPSpriteAtlasInfo,
+} from './font/TMPAssetData';
 
 // Parser
 export { RichTextParser } from './parser/RichTextParser';

@@ -1,7 +1,7 @@
 import { AbstractBitmapFont, Texture, Rectangle } from 'pixi.js';
 import type { CharData } from 'pixi.js';
 import type { TMPFontData, TMPFontDataSpriteSheet } from './TMPFontData';
-import type { UnityTMPData } from './UnityTMPData';
+import type { TMPFontAssetData } from './TMPAssetData';
 
 /**
  * TMPFont extends PixiJS's AbstractBitmapFont with sprite sheet data for <sprite> tags
@@ -177,16 +177,16 @@ export class TMPFont extends AbstractBitmapFont<TMPFont> {
     }
 
     /**
-     * Create a TMPFont from Unity TextMeshPro font data + atlas textures.
+     * Create a TMPFont from TMP font asset data + atlas textures.
      *
-     * Handles all Unity → PixiJS conversion:
-     * - Y-flip (Unity bottom-left origin → PixiJS top-left)
-     * - Glyph rect expansion by atlas padding (Unity stores tight bounds,
+     * Handles all coordinate conversion:
+     * - Y-flip (bottom-left origin → PixiJS top-left)
+     * - Glyph rect expansion by atlas padding (asset stores tight bounds,
      *   but PixiJS needs the SDF spread included in the texture frame)
-     * - Offset calculation from Unity bearings to BMFont-style offsets
+     * - Offset calculation from bearings to BMFont-style offsets
      * - Render mode → distance field type mapping
      */
-    static fromUnityData(data: UnityTMPData, pageTextures: Texture[]): TMPFont {
+    static fromAssetData(data: TMPFontAssetData, pageTextures: Texture[]): TMPFont {
         const font = new TMPFont();
         const face = data.faceInfo;
         const atlas = data.atlas;
@@ -233,7 +233,7 @@ export class TMPFont extends AbstractBitmapFont<TMPFont> {
             const rect = g.glyphRect;
 
             // Expand glyph rect by padding to include SDF spread data.
-            // Unity stores tight bounds; the SDF distance field extends
+            // asset stores tight bounds; the SDF distance field extends
             // into the atlas padding area between packed glyphs.
             const expX = Math.max(0, rect.x - pad);
             const expY = Math.max(0, rect.y - pad);

@@ -7,16 +7,16 @@ import {
 } from 'pixi.js';
 import type { Loader, ResolvedAsset, Texture } from 'pixi.js';
 import { TMPFont } from './TMPFont';
-import type { UnityTMPData } from './UnityTMPData';
+import type { TMPFontAssetData } from './TMPAssetData';
 
 /**
- * PixiJS LoadParser extension for Unity TMP font files (`.unitytmp.json`).
+ * PixiJS LoadParser extension for TMP font asset files (`.unitytmp.json`).
  *
  * Register once:
  * ```ts
  * import { extensions } from 'pixi.js';
- * import { loadUnityTMPFont } from 'pixi-text-mesh-pro';
- * extensions.add(loadUnityTMPFont);
+ * import { loadTMPFontAsset } from 'pixi-text-mesh-pro';
+ * extensions.add(loadTMPFontAsset);
  * ```
  *
  * Then load fonts via the asset system:
@@ -24,23 +24,23 @@ import type { UnityTMPData } from './UnityTMPData';
  * const font = await Assets.load<TMPFont>('fonts/dimbo.unitytmp.json');
  * ```
  */
-export const loadUnityTMPFont = {
+export const loadTMPFontAsset = {
     extension: {
         type: ExtensionType.LoadParser as const,
         priority: LoaderParserPriority.Normal,
     },
 
     id: 'unity-tmp-font',
-    name: 'loadUnityTMPFont',
+    name: 'loadTMPFontAsset',
 
     test(url: string): boolean {
         const clean = url.split('?')[0].split('#')[0].toLowerCase();
         return clean.endsWith('.unitytmp.json') || clean.endsWith('.unitytmp');
     },
 
-    async load(url: string): Promise<UnityTMPData> {
+    async load(url: string): Promise<TMPFontAssetData> {
         const response = await DOMAdapter.get().fetch(url);
-        const json: UnityTMPData = await response.json();
+        const json: TMPFontAssetData = await response.json();
         return json;
     },
 
@@ -54,7 +54,7 @@ export const loadUnityTMPFont = {
     },
 
     async parse(
-        data: UnityTMPData,
+        data: TMPFontAssetData,
         resolvedAsset: ResolvedAsset,
         loader: Loader,
     ): Promise<TMPFont> {
@@ -77,7 +77,7 @@ export const loadUnityTMPFont = {
             (entry) => loadedTextures[entry.src],
         );
 
-        return TMPFont.fromUnityData(data, pageTextures);
+        return TMPFont.fromAssetData(data, pageTextures);
     },
 
     async unload(
