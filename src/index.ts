@@ -33,17 +33,17 @@ export type {
 } from './font/TMPFontData';
 export type {
     TMPFontAssetData,
-    TMPFaceInfo,
-    TMPAssetGlyph,
-    TMPGlyphMetrics,
-    TMPGlyphRect,
-    TMPAssetCharacter,
-    TMPAtlasInfo,
+    FaceInfo,
+    Glyph,
+    GlyphMetrics,
+    GlyphRect,
+    TMPCharacter,
+    AtlasInfo,
     TMPSpriteAssetData,
     TMPSpriteCharacter,
     TMPSpriteGlyph,
-    TMPSpriteFaceInfo,
-    TMPSpriteAtlasInfo,
+    SpriteFaceInfo,
+    SpriteAtlasInfo,
 } from './font/TMPAssetData';
 
 // Parser

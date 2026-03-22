@@ -11,7 +11,7 @@
  */
 
 /** Face metrics (line height, ascent, descent, cap/mean lines, etc.). */
-export interface TMPFaceInfo {
+export interface FaceInfo {
     familyName: string;
     styleName: string;
     pointSize: number;
@@ -34,7 +34,7 @@ export interface TMPFaceInfo {
 }
 
 /** Glyph metrics shared by both font glyphs and sprite glyphs. */
-export interface TMPGlyphMetrics {
+export interface GlyphMetrics {
     width: number;
     height: number;
     horizontalBearingX: number;
@@ -43,7 +43,7 @@ export interface TMPGlyphMetrics {
 }
 
 /** Glyph rect (position and size in atlas texture). */
-export interface TMPGlyphRect {
+export interface GlyphRect {
     x: number;
     y: number;
     width: number;
@@ -51,23 +51,23 @@ export interface TMPGlyphRect {
 }
 
 /** Per-glyph data from TMP m_GlyphTable entries. */
-export interface TMPAssetGlyph {
+export interface Glyph {
     index: number;
-    metrics: TMPGlyphMetrics;
-    glyphRect: TMPGlyphRect;
+    metrics: GlyphMetrics;
+    glyphRect: GlyphRect;
     scale: number;
     atlasIndex: number;
 }
 
 /** Character-to-glyph mapping from TMP m_CharacterTable entries. */
-export interface TMPAssetCharacter {
+export interface TMPCharacter {
     unicode: number;
     glyphIndex: number;
     scale: number;
 }
 
 /** Atlas configuration. */
-export interface TMPAtlasInfo {
+export interface AtlasInfo {
     width: number;
     height: number;
     padding: number;
@@ -76,10 +76,10 @@ export interface TMPAtlasInfo {
 
 /** Top-level structure for extracted TMP font asset data. */
 export interface TMPFontAssetData {
-    faceInfo: TMPFaceInfo;
-    atlas: TMPAtlasInfo;
-    glyphTable: TMPAssetGlyph[];
-    characterTable: TMPAssetCharacter[];
+    faceInfo: FaceInfo;
+    atlas: AtlasInfo;
+    glyphTable: Glyph[];
+    characterTable: TMPCharacter[];
     kerningTable?: Array<{ first: number; second: number; amount: number }>;
     boldStyle?: number;
     boldSpacing?: number;
@@ -99,12 +99,12 @@ export interface TMPSpriteCharacter {
 /** Sprite glyph entry from TMP sprite m_GlyphTable. */
 export interface TMPSpriteGlyph {
     index: number;
-    metrics: TMPGlyphMetrics;
-    glyphRect: TMPGlyphRect;
+    metrics: GlyphMetrics;
+    glyphRect: GlyphRect;
 }
 
 /** Sprite asset face info (often all zeros — falls back to font's face info). */
-export interface TMPSpriteFaceInfo {
+export interface SpriteFaceInfo {
     pointSize: number;
     scale: number;
     lineHeight: number;
@@ -116,7 +116,7 @@ export interface TMPSpriteFaceInfo {
 }
 
 /** Sprite atlas reference. */
-export interface TMPSpriteAtlasInfo {
+export interface SpriteAtlasInfo {
     file: string;
     width: number;
     height: number;
@@ -127,8 +127,8 @@ export interface TMPSpriteAtlasInfo {
  * Mirrors TMP_SpriteAsset structure.
  */
 export interface TMPSpriteAssetData {
-    faceInfo: TMPSpriteFaceInfo;
-    atlas: TMPSpriteAtlasInfo;
+    faceInfo: SpriteFaceInfo;
+    atlas: SpriteAtlasInfo;
     spriteCharacterTable: TMPSpriteCharacter[];
     spriteGlyphTable: TMPSpriteGlyph[];
 }
