@@ -284,10 +284,18 @@ export class TMPLayoutEngine {
 
                 if (sprite) {
                     const spriteScale = pc.fontSize / baseFontSize;
-                    const w = (sprite.width || sprite.texture.width) * spriteScale;
-                    const h = (sprite.height || sprite.texture.height) * spriteScale;
-                    const advance = (sprite.xAdvance || w) * spriteScale;
-                    const yOff = sprite.yOffset * spriteScale;
+                    const spriteW = sprite.width || sprite.texture.width;
+                    const spriteH = sprite.height || sprite.texture.height;
+                    const w = spriteW * spriteScale;
+                    const h = spriteH * spriteScale;
+                    const advance = (sprite.xAdvance || spriteW) * spriteScale;
+
+                    // Vertical alignment: match Unity TMP's baseline-relative positioning.
+                    // Unity: topY = baseline + bearingY * scale
+                    // Our yOffset = base - bearingY (BMFont convention).
+                    // The yOffset is NOT scaled — it positions relative to the line top,
+                    // then the sprite height scales independently.
+                    const yOff = sprite.yOffset + (spriteH - h) * 0.5;
 
                     const ci = createCharacterInfo(
                         i, pc, sprite.texture, spriteScale,
