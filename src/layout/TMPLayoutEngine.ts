@@ -60,7 +60,8 @@ export class TMPLayoutEngine {
         let wordIndex = 0;
         let maxWidth = 0;
 
-        const lineSpacingAdj = style.lineSpacingAdjustment ?? 0;
+        // Line spacing adjustment scaled by em (matches Unity's lineSpacing * currentEmScale)
+        const lineSpacingAdj = (style.lineSpacingAdjustment ?? 0) * style.fontSize * 0.01;
         const baseLineHeight = (style.lineHeight > 0
             ? style.lineHeight
             : fontLineHeight * (style.fontSize / baseFontSize))
