@@ -269,7 +269,9 @@ export class RichTextParser {
 
                     // <br> — insert line break
                     if (lowerName === 'br' && !tag.isClosing) {
-                        result.push(createParsedChar('\n', i, state));
+                        const pc = createParsedChar('\n', i, state);
+                        pc.isLineBreak = true;
+                        result.push(pc);
                         i += tag.length;
                         continue;
                     }
