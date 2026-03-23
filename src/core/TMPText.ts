@@ -2,6 +2,7 @@ import { ViewContainer, ObservablePoint, Bounds } from 'pixi.js';
 import type { PointData, FederatedPointerEvent } from 'pixi.js';
 import { TMPTextStyle, type TMPTextStyleOptions } from './TMPTextStyle';
 import { TMPMaterial } from './TMPMaterial';
+import { TMPSettings } from './TMPSettings';
 import type { TMPFont } from '../font/TMPFont';
 import type { TextInfo, LinkInfo } from './types';
 import { RichTextParser } from '../parser/RichTextParser';
@@ -36,25 +37,13 @@ export interface TMPTextOptions {
  * ```
  */
 export class TMPText extends ViewContainer {
-    /**
-     * Default font used when no `font` is specified in TMPText options.
-     * ```ts
-     * TMPText.defaultFont = myFont;
-     * const text = new TMPText({ text: 'Hello!' }); // uses defaultFont
-     * ```
-     */
-    static defaultFont: TMPFont | null = null;
+    /** @deprecated Use TMPSettings.defaultFont instead. */
+    static get defaultFont() { return TMPSettings.defaultFont; }
+    static set defaultFont(v) { TMPSettings.defaultFont = v; }
 
-    /**
-     * Default style sheet applied to all new TMPText instances.
-     * Enables `<style="name">` tags without setting styleSheet per-instance.
-     * ```ts
-     * TMPText.defaultStyleSheet = TMPStyleSheet.fromJSON({
-     *     yellow: { open: '<color=#ffff00>', close: '</color>' },
-     * });
-     * ```
-     */
-    static defaultStyleSheet: TMPStyleSheet | null = null;
+    /** @deprecated Use TMPSettings.defaultStyleSheet instead. */
+    static get defaultStyleSheet() { return TMPSettings.defaultStyleSheet; }
+    static set defaultStyleSheet(v) { TMPSettings.defaultStyleSheet = v; }
 
     /** @internal — tells PixiJS which render pipe to use. */
     readonly renderPipeId = 'tmpText';
@@ -105,16 +94,16 @@ export class TMPText extends ViewContainer {
         super({});
         this.allowChildren = false;
 
-        const font = options.font ?? TMPText.defaultFont;
+        const font = options.font ?? TMPSettings.defaultFont;
         if (!font) {
-            throw new Error('TMPText: no font provided and TMPText.defaultFont is not set.');
+            throw new Error('TMPText: no font provided and TMPSettings.defaultFont is not set.');
         }
         this._font = font;
         this._parser = new RichTextParser();
 
         // Apply default style sheet if set
-        if (TMPText.defaultStyleSheet) {
-            this._parser.styleSheet = TMPText.defaultStyleSheet;
+        if (TMPSettings.defaultStyleSheet) {
+            this._parser.styleSheet = TMPSettings.defaultStyleSheet;
         }
 
         // Style: apply font's default material as base, then overlay user style

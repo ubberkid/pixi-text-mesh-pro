@@ -5,6 +5,7 @@ export { TMPTextStyle } from './core/TMPTextStyle';
 export type { TMPTextStyleOptions, FontStyleString, VerticalAlignment, OverflowMode } from './core/TMPTextStyle';
 export { TMPTextPipe } from './core/TMPTextPipe';
 export { TMPMaterial } from './core/TMPMaterial';
+export { TMPSettings } from './core/TMPSettings';
 export type { TMPMaterialOptions } from './core/TMPMaterial';
 export type {
     ParsedChar,
