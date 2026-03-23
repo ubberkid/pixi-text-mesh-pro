@@ -29,11 +29,11 @@ npm install github:ubberkid/pixi-text-mesh-pro
 
 ### 1. Register Extensions
 
-Both the render pipe and font loader must be registered **before** creating the PixiJS application:
+The render pipe must be registered **before** `app.init()`. Font loaders must be registered before loading fonts:
 
 ```ts
 import { Application, Assets, extensions } from 'pixi.js';
-import { TMPTextPipe, loadTMPFont, loadUnityTMPFont } from 'pixi-text-mesh-pro';
+import { TMPTextPipe, loadTMPFont, loadTMPFontAsset } from 'pixi-text-mesh-pro';
 
 // Register render pipe BEFORE app.init (so the renderer includes it)
 extensions.add(TMPTextPipe);
@@ -42,33 +42,71 @@ const app = new Application();
 await app.init({ width: 800, height: 600 });
 
 // Register font loaders BEFORE loading fonts
-extensions.add(loadTMPFont);       // for .tmpfont.json files
-extensions.add(loadUnityTMPFont);  // for .unitytmp.json files (Unity TMP assets)
+extensions.add(loadTMPFont);        // for .tmpfont.json files
+extensions.add(loadTMPFontAsset);   // for .unitytmp.json files (TMP font assets)
 ```
 
-### 2. Load a Font and Create Text
+### 2. Set Up Defaults (TMPSettings)
+
+`TMPSettings` mirrors Unity's TMP Settings asset — set global defaults once during initialization:
+
+```ts
+import { TMPSettings, TMPMaterial, TMPStyleSheet } from 'pixi-text-mesh-pro';
+import type { TMPFont } from 'pixi-text-mesh-pro';
+
+// Load font
+const font = await Assets.load<TMPFont>('fonts/dimbo-sdf.unitytmp.json');
+
+// Register material presets
+TMPMaterial.register('Brown Stroke', new TMPMaterial({
+    faceDilate: 0.3,
+    outlineWidth: 0.3,
+    outlineColor: '#451400',
+    shadowOffsetY: -0.4,
+    shadowDilate: 0.28,
+    shadowAlpha: 0.25,
+}));
+
+// Set global defaults
+TMPSettings.defaultFont = font;
+TMPSettings.defaultStyleSheet = TMPStyleSheet.fromJSON({
+    yellow: { open: '<color=#ffff00>', close: '</color>' },
+    red:    { open: '<color=#ff0000>', close: '</color>' },
+});
+TMPSettings.defaultSpriteAsset = 'Small_Icons';
+
+// Set default material on the font (applied as base style)
+font.defaultMaterial = 'Brown Stroke';
+```
+
+### 3. Create Text
+
+With defaults set, creating text is simple — no need to specify font or material:
 
 ```ts
 import { TMPText } from 'pixi-text-mesh-pro';
 
-// Load font (Unity format or native format)
-const font = await Assets.load('fonts/dimbo-sdf.unitytmp.json');
-
-// Create rich text with SDF effects
 const text = new TMPText({
-    text: 'Hello <color=#ff0000>World</color>!',
-    font,
-    style: {
-        fontSize: 48,
-        fill: '#ffffff',
-        outlineWidth: 0.3,
-        outlineColor: '#000000',
-        faceDilate: 0.2,
-        sharpness: 0.5,
-    },
+    text: 'Hello <style="yellow">World</style>!',
+    style: { fontSize: 48, fill: '#ffffff' },
 });
 
 app.stage.addChild(text);
+// Automatically uses default font, material (outline + shadow), and style sheet
+```
+
+You can still override any default per-instance:
+
+```ts
+const text = new TMPText({
+    text: 'Custom',
+    font: otherFont,  // override default font
+    style: {
+        fontSize: 64,
+        fill: '#ffffff',
+        outlineWidth: 0.5,  // overrides material default
+    },
+});
 ```
 
 ## Unity TMP Font Assets
@@ -359,15 +397,16 @@ text.on('linkClick', (linkId, linkInfo, event) => {
 | `TMPText` | Main display object — extends PixiJS `ViewContainer` |
 | `TMPTextStyle` | Style class with SDF effect properties |
 | `TMPMaterial` | Named SDF effect presets with static registry |
+| `TMPSettings` | Global defaults (font, style sheet, sprite asset, etc.) |
 | `TMPTextPipe` | PixiJS render pipe (must be registered before `app.init()`) |
 
 ### Font
 
 | Export | Description |
 |--------|-------------|
-| `TMPFont` | Font class with `fromData()`, `fromUnityData()`, `fromBitmapFont()` |
+| `TMPFont` | Font class with `fromData()`, `fromAssetData()`, `fromBitmapFont()` |
 | `loadTMPFont` | PixiJS loader for `.tmpfont.json` files |
-| `loadUnityTMPFont` | PixiJS loader for `.unitytmp.json` files (Unity TMP format) |
+| `loadTMPFontAsset` | PixiJS loader for `.unitytmp.json` files (TMP font assets) |
 
 ### Parser & Layout
 
