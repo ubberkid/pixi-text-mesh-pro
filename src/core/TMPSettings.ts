@@ -11,63 +11,63 @@ import type { TMPStyleSheet } from '../styles/TMPStyleSheet';
  * TMPSettings.defaultFontSize = 36;
  * ```
  */
-export class TMPSettings {
+export const TMPSettings = {
 
     // -- Font --
 
     /** Default font used when none is specified on TMPText. */
-    static defaultFont: TMPFont | null = null;
+    defaultFont: null as TMPFont | null,
 
     /** Default font size for new TMPText instances. */
-    static defaultFontSize: number = 36;
+    defaultFontSize: 36,
 
     /** Default line spacing adjustment (em-scaled). Negative = tighter. */
-    static defaultLineSpacing: number = 0;
+    defaultLineSpacing: 0,
 
     /** Default character spacing (em-scaled). Positive = wider. */
-    static defaultCharacterSpacing: number = 0;
+    defaultCharacterSpacing: 0,
 
     /** Fallback font assets tried when a glyph is missing. */
-    static fallbackFontAssets: TMPFont[] = [];
+    fallbackFontAssets: [] as TMPFont[],
 
     // -- Style --
 
     /** Default style sheet applied to all TMPText instances. */
-    static defaultStyleSheet: TMPStyleSheet | null = null;
+    defaultStyleSheet: null as TMPStyleSheet | null,
 
     /** Default material name on the default font (applied as base style). */
-    static defaultMaterial: string | null = null;
+    defaultMaterial: null as string | null,
 
     // -- Sprites --
 
     /** Default sprite asset name for `<sprite>` tags without an explicit asset. */
-    static defaultSpriteAsset: string | null = null;
+    defaultSpriteAsset: null as string | null,
 
     // -- Text Behavior --
 
     /** Enable kerning by default. */
-    static enableKerning: boolean = true;
+    enableKerning: true,
 
     /** Enable rich text parsing by default. */
-    static enableRichText: boolean = true;
+    enableRichText: true,
 
     /** Enable escape character parsing (\\n, \\t, etc.). */
-    static enableParseEscapeCharacters: boolean = true;
+    enableParseEscapeCharacters: true,
 
     /** Enable tinting on all inline sprites. */
-    static enableTintAllSprites: boolean = false;
+    enableTintAllSprites: false,
 
     /** Default text wrapping mode (0 = no wrap, 1 = normal). */
-    static textWrappingMode: number = 1;
+    textWrappingMode: 1,
 
     /** Unicode for missing glyph replacement (0 = none). */
-    static missingGlyphCharacter: number = 0;
+    missingGlyphCharacter: 0,
 
     // -- Auto Size --
 
     /** Default auto-size minimum ratio. */
-    static defaultAutoSizeMinRatio: number = 0.5;
+    defaultAutoSizeMinRatio: 0.5,
 
     /** Default auto-size maximum ratio. */
-    static defaultAutoSizeMaxRatio: number = 2;
-}
+    defaultAutoSizeMaxRatio: 2,
+};
