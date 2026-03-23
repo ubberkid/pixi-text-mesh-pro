@@ -369,12 +369,13 @@ export class TMPTextPipe {
         const dx = Math.sqrt(a * a + b * b);
         const dy = Math.sqrt(c * c + d * d);
         const worldScale = (Math.abs(dx) + Math.abs(dy)) / 2;
-        const fontScale = font.renderedFontSize / tmpText.style.fontSize;
         const dfRange = font.distanceField?.range ?? 0;
-        // Multiply by renderer resolution to account for DPR —
-        // groupTransform doesn't include it, but the GPU renders at that density.
+        // uDistance should NOT include fontSize — in Unity, the screen-space
+        // derivative cancels the fontSize factor from the scale, making SDF
+        // effects proportional at any size. Without fontSize here, outline/shadow
+        // scale proportionally: scaleRatioA provides the fontSize-dependent part.
         const resolution = this._renderer.resolution;
-        const distance = worldScale * dfRange * (1 / fontScale) * resolution;
+        const distance = worldScale * dfRange * resolution;
 
         const u = shader.resources.localUniforms.uniforms;
         u.uDistance = distance;
