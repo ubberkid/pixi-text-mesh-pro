@@ -106,13 +106,25 @@ export class TMPText extends ViewContainer {
             this._parser.styleSheet = TMPSettings.defaultStyleSheet;
         }
 
-        // Style: apply font's default material as base, then overlay user style
+        // Style: apply defaults from TMPSettings and font's default material
         let styleOptions = options.style;
-        if (font.defaultMaterial && !(styleOptions instanceof TMPTextStyle)) {
-            const material = TMPMaterial.get(font.defaultMaterial);
-            if (material) {
-                styleOptions = { ...material.toStyleOptions(), ...styleOptions };
+        if (!(styleOptions instanceof TMPTextStyle)) {
+            const defaults: Record<string, unknown> = {};
+
+            // Apply default line spacing from TMPSettings
+            if (TMPSettings.defaultLineSpacing !== 0) {
+                defaults.lineSpacingAdjustment = TMPSettings.defaultLineSpacing;
             }
+
+            // Apply default material properties
+            if (font.defaultMaterial) {
+                const material = TMPMaterial.get(font.defaultMaterial);
+                if (material) {
+                    Object.assign(defaults, material.toStyleOptions());
+                }
+            }
+
+            styleOptions = { ...defaults, ...styleOptions };
         }
 
         if (styleOptions instanceof TMPTextStyle) {
