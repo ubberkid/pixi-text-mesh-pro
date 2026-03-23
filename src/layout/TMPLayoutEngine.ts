@@ -149,6 +149,7 @@ export class TMPLayoutEngine {
 
             for (const ci of wordBuffer) {
                 ci.x += cursorX;
+                ci.y += cursorY;
                 ci.lineIndex = lineIndex;
                 ci.wordIndex = wordIndex;
                 characterInfo.push(ci);
