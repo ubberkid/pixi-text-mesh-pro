@@ -21,8 +21,11 @@ export class TMPSettings {
     /** Default font size for new TMPText instances. */
     static defaultFontSize: number = 36;
 
-    /** Default line spacing adjustment (additive, in pixels). Negative = tighter. */
+    /** Default line spacing adjustment (em-scaled). Negative = tighter. */
     static defaultLineSpacing: number = 0;
+
+    /** Default character spacing (em-scaled). Positive = wider. */
+    static defaultCharacterSpacing: number = 0;
 
     /** Fallback font assets tried when a glyph is missing. */
     static fallbackFontAssets: TMPFont[] = [];

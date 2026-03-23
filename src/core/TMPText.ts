@@ -111,9 +111,12 @@ export class TMPText extends ViewContainer {
         if (!(styleOptions instanceof TMPTextStyle)) {
             const defaults: Record<string, unknown> = {};
 
-            // Apply default line spacing from TMPSettings
+            // Apply default spacing from TMPSettings
             if (TMPSettings.defaultLineSpacing !== 0) {
                 defaults.lineSpacingAdjustment = TMPSettings.defaultLineSpacing;
+            }
+            if (TMPSettings.defaultCharacterSpacing !== 0) {
+                defaults.characterSpacing = TMPSettings.defaultCharacterSpacing;
             }
 
             // Apply default material properties
