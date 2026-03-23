@@ -38,13 +38,23 @@ export interface TMPTextOptions {
 export class TMPText extends ViewContainer {
     /**
      * Default font used when no `font` is specified in TMPText options.
-     * Set once during initialization:
      * ```ts
      * TMPText.defaultFont = myFont;
      * const text = new TMPText({ text: 'Hello!' }); // uses defaultFont
      * ```
      */
     static defaultFont: TMPFont | null = null;
+
+    /**
+     * Default style sheet applied to all new TMPText instances.
+     * Enables `<style="name">` tags without setting styleSheet per-instance.
+     * ```ts
+     * TMPText.defaultStyleSheet = TMPStyleSheet.fromJSON({
+     *     yellow: { open: '<color=#ffff00>', close: '</color>' },
+     * });
+     * ```
+     */
+    static defaultStyleSheet: TMPStyleSheet | null = null;
 
     /** @internal — tells PixiJS which render pipe to use. */
     readonly renderPipeId = 'tmpText';
@@ -101,6 +111,11 @@ export class TMPText extends ViewContainer {
         }
         this._font = font;
         this._parser = new RichTextParser();
+
+        // Apply default style sheet if set
+        if (TMPText.defaultStyleSheet) {
+            this._parser.styleSheet = TMPText.defaultStyleSheet;
+        }
 
         // Style: apply font's default material as base, then overlay user style
         let styleOptions = options.style;
