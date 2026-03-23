@@ -109,30 +109,23 @@ export class InlineSpriteManager {
 
     /**
      * Register sprites from a TMP sprite asset data file (.tmpsprites.json).
-     * Handles all the glyph-to-sprite conversion: atlas rect slicing,
-     * metric scaling, and vertical alignment via bearingY.
-     *
-     * When the sprite asset has no face info (pointSize = 0), sprites are
-     * scaled by `font.ascentLine / spriteHeight` to match the text height.
+     * Stores raw glyph metrics — scaling to match font size happens at
+     * layout time, not registration time (matching Unity's separation
+     * between TMP_SpriteAsset and TMP_FontAsset).
      *
      * @param name - Atlas name for `<sprite="name">` tags
      * @param atlasTexture - The loaded atlas PNG texture
      * @param data - Parsed .tmpsprites.json data
-     * @param font - Font to use for baseline alignment and scaling
      */
     static registerFromAssetData(
         name: string,
         atlasTexture: Texture,
         data: TMPSpriteAssetData,
-        font: TMPFont,
     ): void {
         const glyphMap = new Map<number, (typeof data.spriteGlyphTable)[0]>();
         for (const g of data.spriteGlyphTable) {
             glyphMap.set(g.index, g);
         }
-
-        const fontAscent = font.baseLineOffset;
-        const hasFaceInfo = data.faceInfo.pointSize > 0;
 
         const sprites: Record<string, InlineSpriteEntry> = {};
 
@@ -143,24 +136,21 @@ export class InlineSpriteManager {
             const m = g.metrics;
             const r = g.glyphRect;
 
-            const spriteScale = hasFaceInfo
-                ? fontAscent / data.faceInfo.pointSize * data.faceInfo.scale * ch.scale
-                : fontAscent / m.height * ch.scale;
-
             sprites[ch.name] = {
                 texture: new Texture({
                     source: atlasTexture.source,
                     frame: new Rectangle(r.x, r.y, r.width, r.height),
                 }),
-                width: m.width * spriteScale,
-                height: m.height * spriteScale,
-                xAdvance: m.horizontalAdvance * spriteScale,
-                xOffset: m.horizontalBearingX * spriteScale,
-                yOffset: fontAscent - (m.horizontalBearingY * spriteScale),
+                width: m.width,
+                height: m.height,
+                xAdvance: m.horizontalAdvance,
+                xOffset: m.horizontalBearingX,
+                yOffset: m.horizontalBearingY,
+                scale: ch.scale,
             };
         }
 
-        this.register(name, { texture: atlasTexture, sprites });
+        this.register(name, { texture: atlasTexture, sprites, faceInfo: data.faceInfo });
     }
 
     /** Clear all registered atlases. */

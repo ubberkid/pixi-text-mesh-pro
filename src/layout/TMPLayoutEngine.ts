@@ -272,6 +272,8 @@ export class TMPLayoutEngine {
             // Handle inline sprites
             if (pc.isSprite) {
                 let sprite: import('../sprites/InlineSpriteData').InlineSpriteEntry | undefined;
+                let spriteAtlas: import('../sprites/InlineSpriteData').InlineSpriteAtlas | undefined;
+
                 if (pc.spriteIndex >= 0) {
                     sprite = pc.spriteAsset
                         ? InlineSpriteManager.getSpriteByIndex(pc.spriteAsset, pc.spriteIndex)
@@ -282,23 +284,53 @@ export class TMPLayoutEngine {
                         : InlineSpriteManager.findSprite(pc.spriteName);
                 }
 
+                if (pc.spriteAsset) {
+                    spriteAtlas = InlineSpriteManager.getAtlas(pc.spriteAsset);
+                }
+
                 if (sprite) {
-                    const spriteScale = pc.fontSize / baseFontSize;
                     const spriteW = sprite.width || sprite.texture.width;
                     const spriteH = sprite.height || sprite.texture.height;
-                    const w = spriteW * spriteScale;
-                    const h = spriteH * spriteScale;
-                    const advance = (sprite.xAdvance || spriteW) * spriteScale;
+                    const spriteCharScale = sprite.scale ?? 1;
+                    const spriteFaceInfo = spriteAtlas?.faceInfo;
 
-                    // Vertical alignment: match Unity TMP's baseline-relative positioning.
-                    // Unity: topY = baseline + bearingY * scale
-                    // Our yOffset = base - bearingY (BMFont convention).
-                    // The yOffset is NOT scaled — it positions relative to the line top,
-                    // then the sprite height scales independently.
-                    const yOff = sprite.yOffset + (spriteH - h) * 0.5;
+                    // Match Unity's sprite scaling (TMP_Text.cs lines 4145-4161):
+                    // Case A: sprite asset has face info → scale by spriteFace.pointSize
+                    // Case B: no face info → scale by fontAscent / spriteHeight
+                    let currentElementScale: number;
+                    let elementAscent: number;
+                    let elementDescent: number;
+
+                    const fontScale = pc.fontSize / baseFontSize;
+
+                    if (spriteFaceInfo && spriteFaceInfo.pointSize > 0) {
+                        // Case A: sprite asset has its own metrics
+                        const spriteScale = pc.fontSize / spriteFaceInfo.pointSize * spriteFaceInfo.scale;
+                        currentElementScale = spriteCharScale * spriteScale;
+                        elementAscent = spriteFaceInfo.ascentLine;
+                        elementDescent = spriteFaceInfo.descentLine;
+                    } else {
+                        // Case B: no face info — scale sprite to match font ascent line
+                        const spriteScale = pc.fontSize / baseFontSize;
+                        currentElementScale = fontAscender / spriteH * spriteCharScale * spriteScale;
+                        const scaleDelta = currentElementScale !== 0 ? spriteScale / currentElementScale : 0;
+                        elementAscent = fontAscender * scaleDelta;
+                        elementDescent = fontDescender * scaleDelta;
+                    }
+
+                    const w = spriteW * currentElementScale;
+                    const h = spriteH * currentElementScale;
+                    const advance = (sprite.xAdvance || spriteW) * currentElementScale;
+
+                    // Vertical position: Unity formula (TextMeshPro.cs line 2841)
+                    // topY = baselineOffset + bearingY * currentElementScale
+                    // In our layout, yOff = base - bearingY (BMFont convention)
+                    const bearingY = sprite.yOffset; // stored as raw bearingY
+                    const baseScale = style.fontSize / baseFontSize;
+                    const yOff = baseOffset * baseScale - bearingY * currentElementScale;
 
                     const ci = createCharacterInfo(
-                        i, pc, sprite.texture, spriteScale,
+                        i, pc, sprite.texture, currentElementScale,
                         wordWidth, yOff, w, h,
                         lineIndex, wordIndex,
                     );
@@ -306,8 +338,8 @@ export class TMPLayoutEngine {
                     ci.elementType = 'sprite';
                     ci.origin = cursorX + wordWidth;
                     ci.xAdvance = cursorX + wordWidth + advance;
-                    ci.ascender = -yOff;
-                    ci.descender = -yOff - h;
+                    ci.ascender = elementAscent * fontScale;
+                    ci.descender = elementDescent * fontScale;
                     if (pc.spriteTint >= 0) {
                         ci.color = pc.spriteTint;
                     }

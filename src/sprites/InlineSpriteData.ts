@@ -1,19 +1,22 @@
 import type { Texture } from 'pixi.js';
+import type { SpriteFaceInfo } from '../font/TMPAssetData';
 
 /** Definition of a single inline sprite within an atlas. */
 export interface InlineSpriteEntry {
     /** The sprite texture (sub-region of the atlas). */
     texture: Texture;
-    /** Display width in pixels (0 = use texture width). */
+    /** Glyph metrics width in font units. */
     width: number;
-    /** Display height in pixels (0 = use texture height). */
+    /** Glyph metrics height in font units. */
     height: number;
-    /** Horizontal advance after this sprite (0 = use width). */
+    /** Horizontal advance in font units (0 = use width). */
     xAdvance: number;
-    /** Horizontal offset from the current position (default 0). */
+    /** Horizontal bearing X in font units. */
     xOffset: number;
-    /** Vertical offset from baseline. */
+    /** Horizontal bearing Y in font units (distance from baseline to top). */
     yOffset: number;
+    /** Per-sprite scale multiplier (default 1). */
+    scale?: number;
 }
 
 /** A registered sprite atlas with named sprites. */
@@ -22,4 +25,6 @@ export interface InlineSpriteAtlas {
     texture: Texture;
     /** Named sprites within this atlas. */
     sprites: Record<string, InlineSpriteEntry>;
+    /** Sprite asset face info (used for scaling). When pointSize is 0, layout engine scales by font ascent / sprite height. */
+    faceInfo?: SpriteFaceInfo;
 }
