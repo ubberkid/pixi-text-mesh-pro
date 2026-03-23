@@ -124,7 +124,7 @@ export class TMPLayoutEngine {
                 lineIndex++;
                 // Dynamic line height: use tracked ascender/descender if available, otherwise fixed
                 if (lineMaxAscender > -Infinity && lineMaxDescender < Infinity) {
-                    cursorY += lineMaxAscender - lineMaxDescender;
+                    cursorY += lineMaxAscender - lineMaxDescender + lineSpacingAdj;
                 } else {
                     cursorY += currentLineHeight;
                 }
@@ -518,7 +518,7 @@ export class TMPLayoutEngine {
 
                             lineIndex++;
                             if (lineMaxAscender > -Infinity && lineMaxDescender < Infinity) {
-                                cursorY += lineMaxAscender - lineMaxDescender;
+                                cursorY += lineMaxAscender - lineMaxDescender + lineSpacingAdj;
                             } else {
                                 cursorY += currentLineHeight;
                             }
@@ -552,7 +552,7 @@ export class TMPLayoutEngine {
 
                         lineIndex++;
                         if (lineMaxAscender > -Infinity && lineMaxDescender < Infinity) {
-                            cursorY += lineMaxAscender - lineMaxDescender;
+                            cursorY += lineMaxAscender - lineMaxDescender + lineSpacingAdj;
                         } else {
                             cursorY += currentLineHeight;
                         }
