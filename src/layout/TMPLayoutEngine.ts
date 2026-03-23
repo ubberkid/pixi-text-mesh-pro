@@ -40,7 +40,8 @@ export class TMPLayoutEngine {
         const wordWrap = style.wordWrap;
         const breakWords = style.breakWords;
         const baseLetterSpacing = style.letterSpacing;
-        const baseWordSpacing = style.wordSpacing;
+        // Word spacing scaled by em, matching Unity's m_wordSpacing * currentEmScale
+        const baseWordSpacing = style.wordSpacing * style.fontSize * 0.01;
         const characterSpacingEm = style.characterSpacing ?? 0;
         const baseParagraphSpacing = style.paragraphSpacing;
         const styleAlign = style.align;
