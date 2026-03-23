@@ -422,6 +422,15 @@ export class TMPText extends ViewContainer {
     }
 
     private _rebuildTextInfo(): void {
+        // If wordWrap is enabled and no explicit wordWrapWidth is set,
+        // use the container's layout-computed width (like Unity's RectTransform).
+        if (this._style.wordWrap && this._style.wordWrapWidth <= 0) {
+            const layout = (this as unknown as { _layout?: { computedLayout?: { width: number } } })._layout;
+            if (layout?.computedLayout?.width) {
+                this._style.wordWrapWidth = layout.computedLayout.width;
+            }
+        }
+
         // Apply fontStyle as wrapping tags around the text
         let effectiveText = this._text;
         const fontStyle = this._style.fontStyle;
