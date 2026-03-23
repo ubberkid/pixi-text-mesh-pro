@@ -205,7 +205,7 @@ export class TMPLayoutEngine {
                 const paragraphExtra = baseParagraphSpacing * currentEmScale;
                 // Dynamic line height for explicit line breaks
                 if (lineMaxAscender > -Infinity && lineMaxDescender < Infinity) {
-                    cursorY += lineMaxAscender - lineMaxDescender + paragraphExtra;
+                    cursorY += lineMaxAscender - lineMaxDescender + lineSpacingAdj + paragraphExtra;
                 } else {
                     cursorY += currentLineHeight + paragraphExtra;
                 }
