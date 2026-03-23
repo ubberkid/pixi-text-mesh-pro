@@ -13,7 +13,8 @@ import type { TMPStyleSheet } from '../styles/TMPStyleSheet';
 
 export interface TMPTextOptions {
     text?: string;
-    font: TMPFont;
+    /** Font to use. Falls back to TMPText.defaultFont if not specified. */
+    font?: TMPFont;
     style?: TMPTextStyleOptions | TMPTextStyle;
     anchor?: number | PointData;
     roundPixels?: boolean;
@@ -35,6 +36,16 @@ export interface TMPTextOptions {
  * ```
  */
 export class TMPText extends ViewContainer {
+    /**
+     * Default font used when no `font` is specified in TMPText options.
+     * Set once during initialization:
+     * ```ts
+     * TMPText.defaultFont = myFont;
+     * const text = new TMPText({ text: 'Hello!' }); // uses defaultFont
+     * ```
+     */
+    static defaultFont: TMPFont | null = null;
+
     /** @internal — tells PixiJS which render pipe to use. */
     readonly renderPipeId = 'tmpText';
 
@@ -84,13 +95,17 @@ export class TMPText extends ViewContainer {
         super({});
         this.allowChildren = false;
 
-        this._font = options.font;
+        const font = options.font ?? TMPText.defaultFont;
+        if (!font) {
+            throw new Error('TMPText: no font provided and TMPText.defaultFont is not set.');
+        }
+        this._font = font;
         this._parser = new RichTextParser();
 
         // Style: apply font's default material as base, then overlay user style
         let styleOptions = options.style;
-        if (options.font.defaultMaterial && !(styleOptions instanceof TMPTextStyle)) {
-            const material = TMPMaterial.get(options.font.defaultMaterial);
+        if (font.defaultMaterial && !(styleOptions instanceof TMPTextStyle)) {
+            const material = TMPMaterial.get(font.defaultMaterial);
             if (material) {
                 styleOptions = { ...material.toStyleOptions(), ...styleOptions };
             }
