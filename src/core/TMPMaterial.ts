@@ -124,6 +124,34 @@ export class TMPMaterial {
             TMPMaterial.register(name, new TMPMaterial(data[name]));
         }
     }
+
+    /** Export this material's properties as TMPTextStyle-compatible options. */
+    toStyleOptions(): Record<string, unknown> {
+        const opts: Record<string, unknown> = {};
+        if (this.outlineWidth) opts.outlineWidth = this.outlineWidth;
+        if (this.outlineColor) opts.outlineColor = this.outlineColor;
+        if (this.outlineSoftness) opts.outlineSoftness = this.outlineSoftness;
+        if (this.outlineAlpha !== 1) opts.outlineAlpha = this.outlineAlpha;
+        if (this.shadowOffsetX) opts.shadowOffsetX = this.shadowOffsetX;
+        if (this.shadowOffsetY) opts.shadowOffsetY = this.shadowOffsetY;
+        if (this.shadowColor) opts.shadowColor = this.shadowColor;
+        if (this.shadowDilate) opts.shadowDilate = this.shadowDilate;
+        if (this.shadowSoftness !== 0.5) opts.shadowSoftness = this.shadowSoftness;
+        if (this.shadowAlpha !== 0.5) opts.shadowAlpha = this.shadowAlpha;
+        if (this.glowColor) opts.glowColor = this.glowColor;
+        if (this.glowOffset) opts.glowOffset = this.glowOffset;
+        if (this.glowInner) opts.glowInner = this.glowInner;
+        if (this.glowOuter) opts.glowOuter = this.glowOuter;
+        if (this.glowPower !== 1) opts.glowPower = this.glowPower;
+        if (this.glowAlpha !== 1) opts.glowAlpha = this.glowAlpha;
+        if (this.faceDilate) opts.faceDilate = this.faceDilate;
+        if (this.bevelWidth) opts.bevelWidth = this.bevelWidth;
+        if (this.bevelOffset !== 0.5) opts.bevelOffset = this.bevelOffset;
+        if (this.bevelColor !== 0xffffff) opts.bevelColor = this.bevelColor;
+        if (this.bevelAlpha !== 1) opts.bevelAlpha = this.bevelAlpha;
+        if (this.sharpness) opts.sharpness = this.sharpness;
+        return opts;
+    }
 }
 
 function normalizeColor(value: string | number): number {

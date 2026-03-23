@@ -1,6 +1,7 @@
 import { ViewContainer, ObservablePoint, Bounds } from 'pixi.js';
 import type { PointData, FederatedPointerEvent } from 'pixi.js';
 import { TMPTextStyle, type TMPTextStyleOptions } from './TMPTextStyle';
+import { TMPMaterial } from './TMPMaterial';
 import type { TMPFont } from '../font/TMPFont';
 import type { TextInfo, LinkInfo } from './types';
 import { RichTextParser } from '../parser/RichTextParser';
@@ -86,11 +87,19 @@ export class TMPText extends ViewContainer {
         this._font = options.font;
         this._parser = new RichTextParser();
 
-        // Style
-        if (options.style instanceof TMPTextStyle) {
-            this._style = options.style;
+        // Style: apply font's default material as base, then overlay user style
+        let styleOptions = options.style;
+        if (options.font.defaultMaterial && !(styleOptions instanceof TMPTextStyle)) {
+            const material = TMPMaterial.get(options.font.defaultMaterial);
+            if (material) {
+                styleOptions = { ...material.toStyleOptions(), ...styleOptions };
+            }
+        }
+
+        if (styleOptions instanceof TMPTextStyle) {
+            this._style = styleOptions;
         } else {
-            this._style = new TMPTextStyle(options.style);
+            this._style = new TMPTextStyle(styleOptions);
         }
         this._style.on('update', this._onStyleUpdate, this);
 

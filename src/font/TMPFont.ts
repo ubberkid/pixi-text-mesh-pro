@@ -67,6 +67,14 @@ export class TMPFont extends AbstractBitmapFont<TMPFont> {
     /** Bold spacing: extra advance in font units added per bold character (Unity default ~7). */
     boldSpacing = 7;
 
+    /**
+     * Default material name applied to TMPText instances using this font.
+     * When set, the material's SDF properties (outline, shadow, etc.) are
+     * applied as defaults on the TMPTextStyle unless overridden.
+     * Matches Unity's TMP_FontAsset.material concept.
+     */
+    defaultMaterial: string | null = null;
+
     /** Public accessor for the rendered font size (base class has it protected). */
     get renderedFontSize(): number {
         return this.baseRenderedFontSize;
