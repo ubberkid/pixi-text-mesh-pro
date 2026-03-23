@@ -55,7 +55,7 @@ export class TMPLayoutEngine {
         const styleMarginTop = style.marginTop ?? 0;
 
         let cursorX = styleMarginLeft;
-        let cursorY = baseOffset + styleMarginTop;
+        let cursorY = styleMarginTop;
         let lineIndex = 0;
         let wordIndex = 0;
         let maxWidth = 0;
