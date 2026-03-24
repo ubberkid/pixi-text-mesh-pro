@@ -58,7 +58,7 @@ export const TMPSettings = {
     enableTintAllSprites: false,
 
     /** Default text wrapping mode (0 = no wrap, 1 = normal). */
-    textWrappingMode: 1,
+    textWrappingMode: 0,
 
     /** Unicode for missing glyph replacement (0 = none). */
     missingGlyphCharacter: 0,

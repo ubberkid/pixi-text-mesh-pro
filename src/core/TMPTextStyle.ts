@@ -131,7 +131,7 @@ export class TMPTextStyle extends EventEmitter {
         this._align = options.align ?? 'left';
         this._verticalAlign = options.verticalAlign ?? 'top';
         this._containerHeight = options.containerHeight ?? 0;
-        this._wordWrap = options.wordWrap ?? true;
+        this._wordWrap = options.wordWrap ?? false;
         this._wordWrapWidth = options.wordWrapWidth ?? 0;
         this._breakWords = options.breakWords ?? false;
         this._lineHeight = options.lineHeight ?? 0;
