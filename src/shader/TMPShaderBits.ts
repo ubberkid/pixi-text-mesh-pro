@@ -417,9 +417,15 @@ export const localUniformTMPBit = {
             @group(2) @binding(0) var<uniform> localUniforms : LocalUniforms;
         `,
         main: /* wgsl */`
+            var tmpShapeColor: vec4<f32>;
+            if (vColor.a > 0.0) {
+                tmpShapeColor = vec4<f32>(vColor.rgb / vColor.a, 1.0);
+            } else {
+                tmpShapeColor = vec4<f32>(1.0);
+            }
             outColor = calculateTMPAlpha(
                 outColor,
-                localUniforms.uColor,
+                tmpShapeColor,
                 localUniforms.uDistance,
                 localUniforms.uOutlineWidth,
                 localUniforms.uOutlineColor,
@@ -446,6 +452,9 @@ export const localUniformTMPBit = {
                 vUV,
                 tmpShadowSample,
             );
+        `,
+        end: /* wgsl */`
+            finalColor = outColor * vColor.a;
         `,
     },
 };
@@ -496,10 +505,6 @@ export const localUniformTMPBitGl = {
             uniform float uGradientScale;
         `,
         main: /* glsl */`
-            // vColor is premultiplied (rgb * world_alpha, world_alpha). Unpremultiply
-            // to recover the per-glyph face color, then force alpha = 1 so the helper
-            // doesn't double-apply world alpha — the template's final outColor * vColor
-            // multiply takes care of that.
             vec4 tmpShapeColor = vColor.a > 0.0
                 ? vec4(vColor.rgb / vColor.a, 1.0)
                 : vec4(1.0);
@@ -532,6 +537,9 @@ export const localUniformTMPBitGl = {
                 vUV,
                 tmpShadowSample
             );
+        `,
+        end: /* glsl */`
+            finalColor = outColor * vColor.a;
         `,
     },
 };
