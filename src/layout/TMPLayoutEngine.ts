@@ -325,10 +325,7 @@ export class TMPLayoutEngine {
                     const h = spriteH * currentElementScale;
                     const advance = (sprite.xAdvance || spriteW) * currentElementScale;
 
-                    // Vertical position: Unity formula (TextMeshPro.cs line 2841)
-                    // topY = baselineOffset + bearingY * currentElementScale
-                    // In our layout, yOff = base - bearingY (BMFont convention)
-                    const bearingY = sprite.yOffset; // stored as raw bearingY
+                    const bearingY = sprite.yOffset;
                     const baseScale = style.fontSize / baseFontSize;
                     const yOff = baseOffset * baseScale - bearingY * currentElementScale;
 

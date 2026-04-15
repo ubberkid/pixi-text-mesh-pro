@@ -262,47 +262,9 @@ export class TMPTextPipe {
                 }
             }
 
-            // Shadow pass: render offset shadow glyphs behind main text.
-            // Done as geometry rather than in the fragment shader because the
-            // batch pipeline can't re-sample the SDF texture at offset UVs.
-            const style = tmpText.style;
-            const hasShadow = !isSprites && materialName === '' && (
-                style.shadowDilate > 0 || style.shadowOffsetX !== 0 || style.shadowOffsetY !== 0
-            );
-
-            if (hasShadow) {
-                const shadowColor = style.shadowColor;
-                const shadowTint = ((shadowColor >> 16) & 0xff) << 16
-                    | ((shadowColor >> 8) & 0xff) << 8
-                    | (shadowColor & 0xff);
-                const baseFontSize = style.fontSize;
-                const baseSx = style.shadowOffsetX * baseFontSize * 0.05;
-                const baseSy = style.shadowOffsetY * baseFontSize * 0.05;
-
-                for (const i of charIndices) {
-                    if (maxChars >= 0 && i >= maxChars) break;
-                    const charInfo = textInfo.characterInfo[i];
-                    if (!charInfo.isVisible || !charInfo.texture) continue;
-
-                    // Scale shadow offset per character for <size> tags
-                    const charScale = charInfo.scale ?? 1;
-                    const baseScale = baseFontSize / (font?.renderedFontSize ?? baseFontSize);
-                    const relScale = baseScale > 0 ? charScale / baseScale : 1;
-                    const sx = baseSx * relScale;
-                    const sy = baseSy * relScale;
-
-                    context.texture(
-                        charInfo.texture,
-                        shadowTint || 'black',
-                        Math.round(charInfo.x + sx),
-                        Math.round(charInfo.y + sy),
-                        charInfo.width,
-                        charInfo.height,
-                    );
-                }
-            }
-
-            // Render characters in this material group
+            // Render characters in this material group.
+            // Drop shadow is composited inside the SDF shader via a second
+            // atlas sample at the shadow-offset UV (generateTMPShadowSampleBit).
             for (const i of charIndices) {
                 if (maxChars >= 0 && i >= maxChars) break;
                 const charInfo = textInfo.characterInfo[i];

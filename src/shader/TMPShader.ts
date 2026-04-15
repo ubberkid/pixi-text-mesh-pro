@@ -17,11 +17,13 @@ import type { TMPMaterial } from '../core/TMPMaterial';
 import {
     tmpSDFBit, tmpSDFBitGl,
     localUniformTMPBit, localUniformTMPBitGl,
+    generateTMPShadowSampleBit, generateTMPShadowSampleBitGl,
 } from './TMPShaderBits';
 
-// Cached programs
-let gpuProgram: ReturnType<typeof compileHighShaderGpuProgram>;
-let glProgram: ReturnType<typeof compileHighShaderGlProgram>;
+// Cached programs — keyed by maxTextures because the shadow sample bit is
+// generated per texture-batch size (mirroring generateTextureBatchBit).
+const gpuPrograms: Record<number, ReturnType<typeof compileHighShaderGpuProgram>> = {};
+const glPrograms: Record<number, ReturnType<typeof compileHighShaderGlProgram>> = {};
 
 /**
  * Custom TMP SDF shader with outline, shadow, glow, and face dilate.
@@ -32,27 +34,31 @@ let glProgram: ReturnType<typeof compileHighShaderGlProgram>;
 export class TMPShader extends Shader {
     constructor(maxTextures: number) {
         // Build programs (cached, same pattern as SdfShader)
-        gpuProgram ??= compileHighShaderGpuProgram({
+        gpuPrograms[maxTextures] ??= compileHighShaderGpuProgram({
             name: 'tmp-sdf-shader',
             bits: [
                 colorBit,
                 generateTextureBatchBit(maxTextures),
+                generateTMPShadowSampleBit(maxTextures),
                 localUniformTMPBit,
                 tmpSDFBit,
                 roundPixelsBit,
             ],
         });
+        const gpuProgram = gpuPrograms[maxTextures];
 
-        glProgram ??= compileHighShaderGlProgram({
+        glPrograms[maxTextures] ??= compileHighShaderGlProgram({
             name: 'tmp-sdf-shader',
             bits: [
                 colorBitGl,
                 generateTextureBatchBitGl(maxTextures),
+                generateTMPShadowSampleBitGl(maxTextures),
                 localUniformTMPBitGl,
                 tmpSDFBitGl,
                 roundPixelsBitGl,
             ],
         });
+        const glProgram = glPrograms[maxTextures];
 
         const uniforms = new UniformGroup({
             uColor: { value: new Float32Array([1, 1, 1, 1]), type: 'vec4<f32>' },

@@ -43,7 +43,7 @@ export const tmpSDFBit = {
                 sharpness: f32,
                 gradientScale: f32,
                 vUV: vec2<f32>,
-                msdfSample: vec4<f32>,
+                shadowSample: vec4<f32>,
             ) -> vec4<f32> {
                 // MSDF median
                 var median = msdfColor.r + msdfColor.g + msdfColor.b -
@@ -98,10 +98,8 @@ export const tmpSDFBit = {
                 if (bevelWidth > 0.0 && composited.a > 0.01) {
                     var texelSize = vec2<f32>(1.0 / texSize.x, 1.0 / texSize.y);
 
-                    // We use the msdfSample that was passed in (same as msdfColor for center).
-                    // For the 4 offset taps, we approximate using the MSDF channels since
-                    // we cannot do additional texture samples in the batch pipeline.
-                    // Use the R channel differences as a gradient proxy.
+                    // Approximate normal from MSDF channel differences around the center
+                    // sample, used as a gradient proxy for the 4 bevel taps.
                     var left  = msdfColor.r;
                     var right = msdfColor.g;
                     var down  = msdfColor.b;
@@ -125,36 +123,26 @@ export const tmpSDFBit = {
 
                 // --- Shadow / underlay via UV-offset re-sampling ---
                 // Unity: re-samples texture at offset UV, not gradient approximation.
-                // Offset = -(_UnderlayOffset * _ScaleRatioC) * _GradientScale / textureSize
+                // The second atlas fetch is done by generateTMPShadowSampleBit, which
+                // exposes the sampled MSDF as shadowSample.
                 if (shadowDilate > 0.0 || shadowOffset.x != 0.0 || shadowOffset.y != 0.0) {
-                    var uvOffset = vec2<f32>(
-                        -(shadowOffset.x * scaleRatioC) * gradientScale / texSize.x,
-                        -(shadowOffset.y * scaleRatioC) * gradientScale / texSize.y
-                    );
-                    var shadowUV = vUV + uvOffset;
-
-                    // Re-sample the SDF at the offset UV.
-                    // In batch pipeline we can't do a second texture fetch, so we approximate:
-                    // shift the median by the offset magnitude projected onto the SDF gradient.
-                    // This is the best we can do without a second texture sample.
-                    var sdx = msdfColor.r - msdfColor.g;
-                    var sdy = msdfColor.b - ((msdfColor.r + msdfColor.g) * 0.5);
-                    var sGradLen = sqrt(sdx * sdx + sdy * sdy) + 0.001;
-                    var gradDir = vec2<f32>(sdx / sGradLen, sdy / sGradLen);
-
-                    var uvOffsetLen = sqrt(uvOffset.x * uvOffset.x + uvOffset.y * uvOffset.y);
-                    var offsetDir = vec2<f32>(uvOffset.x / (uvOffsetLen + 0.001), uvOffset.y / (uvOffsetLen + 0.001));
-
-                    // Project the UV offset onto the SDF gradient direction
-                    var shadowMedian = median + dot(gradDir, offsetDir) * uvOffsetLen * texSize.x * 0.5;
+                    // Compute median from the offset sample
+                    var shadowMedian = shadowSample.r + shadowSample.g + shadowSample.b -
+                        min(shadowSample.r, min(shadowSample.g, shadowSample.b)) -
+                        max(shadowSample.r, max(shadowSample.g, shadowSample.b));
+                    shadowMedian = min(shadowMedian, shadowSample.a);
 
                     // Apply underlay dilate and softness (Unity scale ratios)
                     var layerScale = scale;
                     var scaledUnderlaySoftness = shadowSoftness * scaleRatioC;
                     layerScale = layerScale / (1.0 + scaledUnderlaySoftness * layerScale);
-                    var layerBias = faceThreshold * layerScale - 0.5 - (shadowDilate * scaleRatioC * 0.5 * layerScale);
 
-                    var shadowAlpha = clamp(shadowMedian * layerScale - layerBias, 0.0, 1.0);
+                    // Unity: saturate((d - (threshold - dilate)) * scale + 0.5)
+                    var shadowAlpha = clamp(
+                        (shadowMedian - faceThreshold + shadowDilate * scaleRatioC * 0.5) * layerScale + 0.5,
+                        0.0,
+                        1.0,
+                    );
                     var premulShadow = vec4<f32>(shadowColor.rgb * shadowColor.a, shadowColor.a);
 
                     // Composite shadow behind face+outline (Unity: += shadow * (1 - faceColor.a))
@@ -230,7 +218,7 @@ export const tmpSDFBitGl = {
                 float sharpness,
                 float gradientScale,
                 vec2 vUV,
-                vec4 msdfSample
+                vec4 shadowSample
             ) {
                 // MSDF median
                 float median = msdfColor.r + msdfColor.g + msdfColor.b -
@@ -298,29 +286,24 @@ export const tmpSDFBitGl = {
                     );
                 }
 
-                // Shadow / underlay via UV-offset approximation
+                // Shadow / underlay via offset atlas re-sample.
+                // The offset fetch is performed by generateTMPShadowSampleBitGl,
+                // which exposes the sampled MSDF as shadowSample.
                 if (shadowDilate > 0.0 || shadowOffset.x != 0.0 || shadowOffset.y != 0.0) {
-                    vec2 uvOffset = vec2(
-                        -(shadowOffset.x * scaleRatioC) * gradientScale / texSize.x,
-                        -(shadowOffset.y * scaleRatioC) * gradientScale / texSize.y
-                    );
-
-                    float sdx = msdfColor.r - msdfColor.g;
-                    float sdy = msdfColor.b - ((msdfColor.r + msdfColor.g) * 0.5);
-                    float sGradLen = sqrt(sdx * sdx + sdy * sdy) + 0.001;
-                    vec2 gradDir = vec2(sdx / sGradLen, sdy / sGradLen);
-
-                    float uvOffsetLen = sqrt(uvOffset.x * uvOffset.x + uvOffset.y * uvOffset.y);
-                    vec2 offsetDir = vec2(uvOffset.x / (uvOffsetLen + 0.001), uvOffset.y / (uvOffsetLen + 0.001));
-
-                    float shadowMedian = median + dot(gradDir, offsetDir) * uvOffsetLen * texSize.x * 0.5;
+                    float shadowMedian = shadowSample.r + shadowSample.g + shadowSample.b -
+                        min(shadowSample.r, min(shadowSample.g, shadowSample.b)) -
+                        max(shadowSample.r, max(shadowSample.g, shadowSample.b));
+                    shadowMedian = min(shadowMedian, shadowSample.a);
 
                     float layerScale = scale;
                     float scaledUnderlaySoftness = shadowSoftness * scaleRatioC;
                     layerScale /= 1.0 + scaledUnderlaySoftness * layerScale;
-                    float layerBias = faceThreshold * layerScale - 0.5 - (shadowDilate * scaleRatioC * 0.5 * layerScale);
 
-                    float shadowAlpha = clamp(shadowMedian * layerScale - layerBias, 0.0, 1.0);
+                    float shadowAlpha = clamp(
+                        (shadowMedian - faceThreshold + shadowDilate * scaleRatioC * 0.5) * layerScale + 0.5,
+                        0.0,
+                        1.0
+                    );
                     vec4 premulShadow = vec4(shadowColor.rgb * shadowColor.a, shadowColor.a);
 
                     composited += premulShadow * shadowAlpha * (1.0 - composited.a);
@@ -464,7 +447,7 @@ export const localUniformTMPBit = {
                 localUniforms.uSharpness,
                 localUniforms.uGradientScale,
                 vUV,
-                outColor,
+                tmpShadowSample,
             );
         `,
     },
@@ -516,9 +499,16 @@ export const localUniformTMPBitGl = {
             uniform float uGradientScale;
         `,
         main: /* glsl */`
+            // vColor is premultiplied (rgb * world_alpha, world_alpha). Unpremultiply
+            // to recover the per-glyph face color, then force alpha = 1 so the helper
+            // doesn't double-apply world alpha — the template's final outColor * vColor
+            // multiply takes care of that.
+            vec4 tmpShapeColor = vColor.a > 0.0
+                ? vec4(vColor.rgb / vColor.a, 1.0)
+                : vec4(1.0);
             outColor = calculateTMPAlpha(
                 outColor,
-                vColor,
+                tmpShapeColor,
                 uDistance,
                 uOutlineWidth,
                 uOutlineColor,
@@ -543,8 +533,111 @@ export const localUniformTMPBitGl = {
                 uSharpness,
                 uGradientScale,
                 vUV,
-                outColor
+                tmpShadowSample
             );
         `,
     },
 };
+
+// ---------- Shadow sample bit ----------
+//
+// Runs after the batch texture sample and performs a second atlas fetch at the
+// shadow offset UV. Exposes `tmpShadowSample` in the fragment main so
+// `calculateTMPAlpha` can compute the underlay median from a real sample rather
+// than a gradient approximation. This replaces the old duplicate-geometry shadow
+// pass in TMPTextPipe, keeping the shadow alpha-correct when the text is drawn
+// with less than full alpha.
+
+const tmpShadowSampleWgslCache: Record<number, {
+    name: string;
+    fragment: { main: string };
+}> = {};
+
+function generateShadowSampleWgslSrc(maxTextures: number): string {
+    if (maxTextures === 1) {
+        return `tmpShadowSample = textureSampleGrad(textureSource1, textureSampler1, tmpShadowUV, uvDx, uvDy);`;
+    }
+
+    const lines: string[] = [];
+    lines.push('switch vTextureId {');
+    for (let i = 0; i < maxTextures; i++) {
+        if (i === maxTextures - 1) {
+            lines.push('  default:{');
+        } else {
+            lines.push(`  case ${i}:{`);
+        }
+        lines.push(
+            `      tmpShadowSample = textureSampleGrad(textureSource${i + 1}, textureSampler${i + 1}, tmpShadowUV, uvDx, uvDy);`,
+        );
+        lines.push('      break;}');
+    }
+    lines.push('}');
+    return lines.join('\n                ');
+}
+
+export function generateTMPShadowSampleBit(maxTextures: number) {
+    if (!tmpShadowSampleWgslCache[maxTextures]) {
+        tmpShadowSampleWgslCache[maxTextures] = {
+            name: 'tmp-shadow-sample-bit',
+            fragment: {
+                // The second atlas fetch is gated on a uniform branch so text
+                // without a shadow only pays for one texture sample per fragment.
+                // Uniform branches are free on modern GPUs (all fragments in a
+                // draw call take the same path).
+                main: /* wgsl */`
+                var tmpShadowSample: vec4<f32> = vec4<f32>(0.0);
+                if (localUniforms.uShadowDilate > 0.0 ||
+                    localUniforms.uShadowOffset.x != 0.0 ||
+                    localUniforms.uShadowOffset.y != 0.0) {
+                    var tmpShadowUV = vUV + vec2<f32>(
+                        -(localUniforms.uShadowOffset.x * localUniforms.uScaleRatioC) * localUniforms.uGradientScale / localUniforms.uTexSize.x,
+                        -(localUniforms.uShadowOffset.y * localUniforms.uScaleRatioC) * localUniforms.uGradientScale / localUniforms.uTexSize.y,
+                    );
+                    ${generateShadowSampleWgslSrc(maxTextures)}
+                }
+                `,
+            },
+        };
+    }
+    return tmpShadowSampleWgslCache[maxTextures];
+}
+
+const tmpShadowSampleGlCache: Record<number, {
+    name: string;
+    fragment: { main: string };
+}> = {};
+
+function generateShadowSampleGlSrc(maxTextures: number): string {
+    const lines: string[] = [];
+    for (let i = 0; i < maxTextures; i++) {
+        if (i > 0) lines.push('else');
+        if (i < maxTextures - 1) lines.push(`if(vTextureId < ${i}.5)`);
+        lines.push('{');
+        lines.push(`    tmpShadowSample = texture(uTextures[${i}], tmpShadowUV);`);
+        lines.push('}');
+    }
+    return lines.join('\n                ');
+}
+
+export function generateTMPShadowSampleBitGl(maxTextures: number) {
+    if (!tmpShadowSampleGlCache[maxTextures]) {
+        tmpShadowSampleGlCache[maxTextures] = {
+            name: 'tmp-shadow-sample-bit',
+            fragment: {
+                // Uniform-branch the second sample so non-shadow text doesn't
+                // pay for an extra atlas fetch per fragment.
+                main: /* glsl */`
+                vec4 tmpShadowSample = vec4(0.0);
+                if (uShadowDilate > 0.0 || uShadowOffset.x != 0.0 || uShadowOffset.y != 0.0) {
+                    vec2 tmpShadowUV = vUV + vec2(
+                        -(uShadowOffset.x * uScaleRatioC) * uGradientScale / uTexSize.x,
+                        -(uShadowOffset.y * uScaleRatioC) * uGradientScale / uTexSize.y
+                    );
+                    ${generateShadowSampleGlSrc(maxTextures)}
+                }
+                `,
+            },
+        };
+    }
+    return tmpShadowSampleGlCache[maxTextures];
+}
