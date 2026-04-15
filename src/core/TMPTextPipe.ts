@@ -332,21 +332,41 @@ export class TMPTextPipe {
         const dy = Math.sqrt(c * c + d * d);
         const worldScale = (Math.abs(dx) + Math.abs(dy)) / 2;
         const dfRange = font.distanceField?.range ?? 0;
-        // uDistance should NOT include fontSize — in Unity, the screen-space
-        // derivative cancels the fontSize factor from the scale, making SDF
-        // effects proportional at any size. Without fontSize here, outline/shadow
-        // scale proportionally: scaleRatioA provides the fontSize-dependent part.
         const resolution = this._renderer.resolution;
-        const distance = worldScale * dfRange * resolution;
+        const fontDataScale = (font as unknown as { fontScale?: number }).fontScale ?? 1;
+        const sizeRatio = (tmpText.style.fontSize / font.renderedFontSize) * fontDataScale;
+        const distance = worldScale * sizeRatio * dfRange * resolution * 1.3333;
 
         const u = shader.resources.localUniforms.uniforms;
         u.uDistance = distance;
 
-        const fontDataScale = (font as unknown as { fontScale?: number }).fontScale ?? 1;
-        const scaleRatio = (tmpText.style.fontSize / font.renderedFontSize) * fontDataScale;
-        u.uScaleRatioA = scaleRatio;
-        u.uScaleRatioB = scaleRatio;
-        u.uScaleRatioC = scaleRatio;
+        const effectSource = materialName
+            ? (TMPMaterial.get(materialName) ?? tmpText.style)
+            : tmpText.style;
+
+        const faceDilate = effectSource.faceDilate ?? 0;
+        const outlineWidth = effectSource.outlineWidth ?? 0;
+        const outlineSoftness = effectSource.outlineSoftness ?? 0;
+        const glowOffset = effectSource.glowOffset ?? 0;
+        const glowOuter = effectSource.glowOuter ?? 0;
+        const shadowOffsetX = effectSource.shadowOffsetX ?? 0;
+        const shadowOffsetY = effectSource.shadowOffsetY ?? 0;
+        const shadowDilate = effectSource.shadowDilate ?? 0;
+        const shadowSoftness = effectSource.shadowSoftness ?? 0;
+
+        const clamp = 1.0;
+        const tA = Math.max(1, faceDilate + outlineWidth + outlineSoftness);
+        const scaleRatioA = (dfRange - clamp) / (dfRange * tA);
+
+        const rangeBC = (faceDilate) * (dfRange - clamp);
+        const tB = Math.max(1, glowOffset + glowOuter);
+        const scaleRatioB = Math.max(0, dfRange - clamp - rangeBC) / (dfRange * tB);
+        const tC = Math.max(1, Math.max(Math.abs(shadowOffsetX), Math.abs(shadowOffsetY)) + shadowDilate + shadowSoftness);
+        const scaleRatioC = Math.max(0, dfRange - clamp - rangeBC) / (dfRange * tC);
+
+        u.uScaleRatioA = scaleRatioA;
+        u.uScaleRatioB = scaleRatioB;
+        u.uScaleRatioC = scaleRatioC;
 
         const pageTexture = font.pages?.[0]?.texture;
         if (pageTexture) {

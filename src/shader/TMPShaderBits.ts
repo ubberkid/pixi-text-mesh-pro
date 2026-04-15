@@ -68,9 +68,8 @@ export const tmpSDFBit = {
                 // param.x = 0.5 - weight
                 var faceThreshold = 0.5 - weight;
                 var faceAlpha = clamp((median - faceThreshold) * softScale + 0.5, 0.0, 1.0);
-                var faceResult = shapeColor * faceAlpha;
-                // Premultiply face
-                faceResult = vec4<f32>(faceResult.rgb * faceResult.a, faceResult.a);
+                var premulShape = vec4<f32>(shapeColor.rgb * shapeColor.a, shapeColor.a);
+                var faceResult = premulShape * faceAlpha;
 
                 // --- Outline compositing (Unity GetColor / OUTLINE_ON) ---
                 // outlineWidth is [0,1], param.z = outlineWidth * scaleRatioA * 0.5
@@ -236,12 +235,10 @@ export const tmpSDFBitGl = {
                 float scaledOutlineSoftness = outlineSoftness * scaleRatioA;
                 float softScale = scale / (1.0 + scaledOutlineSoftness * scale);
 
-                // Face alpha (Unity: faceColor * saturate((d - param.x) * scale + 0.5))
                 float faceThreshold = 0.5 - weight;
                 float faceAlpha = clamp((median - faceThreshold) * softScale + 0.5, 0.0, 1.0);
-                vec4 faceResult = shapeColor * faceAlpha;
-                // Premultiply face
-                faceResult = vec4(faceResult.rgb * faceResult.a, faceResult.a);
+                vec4 premulShape = vec4(shapeColor.rgb * shapeColor.a, shapeColor.a);
+                vec4 faceResult = premulShape * faceAlpha;
 
                 // Outline compositing (Unity GetColor / OUTLINE_ON)
                 float scaledOutlineWidth = outlineWidth * scaleRatioA * 0.5;
