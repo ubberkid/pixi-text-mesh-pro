@@ -218,7 +218,7 @@ export class TMPLayoutEngine {
                     lineAdvance = lineMaxAscender - lineMaxDescender;
                 } else {
                     const lfScale = pc.fontSize / baseFontSize;
-                    lineAdvance = (fontAscender - fontDescender) * lfScale;
+                    lineAdvance = (Math.abs(fontAscender) + Math.abs(fontDescender)) * lfScale;
                 }
                 cursorY += lineAdvance + lineSpacingAdj + paragraphExtra;
                 cursorX = styleMarginLeft;
@@ -602,11 +602,15 @@ export class TMPLayoutEngine {
                 ci.origin = cursorX + wordWidth;
                 ci.xAdvance = cursorX + wordWidth + advance;
 
-                // Compute glyph ascender/descender
-                const glyphAscender = (charData.yOffset) * totalCharScale;
-                const glyphDescender = (charData.yOffset - (charData.texture ? charData.texture.orig.height : 0)) * totalCharScale;
-                ci.ascender = Math.max(fontAscender * totalCharScale, glyphAscender);
-                ci.descender = Math.min(fontDescender * totalCharScale, glyphDescender);
+                // Use font-driven ascender/descender, not glyph-driven. The
+                // texture's height includes SDF atlas padding, so a glyph-based
+                // descender over-counts that padding and inflates line height
+                // for non-empty lines (making them taller than empty lines at
+                // the same size). Math.abs normalizes across font conventions
+                // (Unity faceInfo: descent negative; BMFont info: descent
+                // positive) so descender always reads negative below baseline.
+                ci.ascender = Math.abs(fontAscender) * totalCharScale;
+                ci.descender = -Math.abs(fontDescender) * totalCharScale;
 
                 // Update per-line ascender/descender
                 if (ci.isVisible) {
