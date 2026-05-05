@@ -205,15 +205,22 @@ export class TMPLayoutEngine {
                 // Paragraph spacing in em units: scale by currentEmScale (fontSize * 0.01)
                 const currentEmScale = style.fontSize * 0.01;
                 const paragraphExtra = baseParagraphSpacing * currentEmScale;
-                // Advance by a height derived from the LF char's own font size,
-                // not the previous line's max ascender/descender — otherwise an
-                // inline <size> tag on that line inflates the gap after <br>.
-                const lfHeight = pc.lineHeightOverride > 0
-                    ? pc.lineHeightOverride
-                    : style.lineHeight > 0
-                        ? style.lineHeight
-                        : fontLineHeight * (pc.fontSize / baseFontSize);
-                cursorY += lfHeight + lineSpacingAdj + paragraphExtra;
+                // Dynamic line height: advance by the line's own ascender +
+                // |descender|. Empty lines (no visible chars) synthesize that
+                // from the LF char's own font size so they aren't artificially
+                // smaller than non-empty lines at the same size.
+                let lineAdvance: number;
+                if (pc.lineHeightOverride > 0) {
+                    lineAdvance = pc.lineHeightOverride;
+                } else if (style.lineHeight > 0) {
+                    lineAdvance = style.lineHeight;
+                } else if (lineMaxAscender > -Infinity && lineMaxDescender < Infinity) {
+                    lineAdvance = lineMaxAscender - lineMaxDescender;
+                } else {
+                    const lfScale = pc.fontSize / baseFontSize;
+                    lineAdvance = (fontAscender - fontDescender) * lfScale;
+                }
+                cursorY += lineAdvance + lineSpacingAdj + paragraphExtra;
                 cursorX = styleMarginLeft;
                 lineSpaceCount = 0;
                 lineVisibleCount = 0;
