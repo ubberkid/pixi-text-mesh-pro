@@ -113,7 +113,7 @@ describe('Phase 5c Layout', () => {
             // Only first line should get indent, not the wrapped line.
             const info = layout('<line-indent=5>Hello World</line-indent>', {
                 wordWrap: true,
-                wordWrapWidth: 65, // "Hello" = 50px + indent 5 = 55, fits. "Hello " = 60 + 5 = 65, but "World" would push to 115.
+                containerWidth: 65, // "Hello" = 50px + indent 5 = 55, fits. "Hello " = 60 + 5 = 65, but "World" would push to 115.
             });
             // Find 'W' — start of second line (wrapped)
             const wChar = info.characterInfo.find(c => c.char === 'W')!;
@@ -216,14 +216,14 @@ describe('Phase 5c Layout', () => {
 
     describe('autoSizeFontSize', () => {
         it('should find a font size that fits within container', () => {
-            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, wordWrapWidth: 200 });
+            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, containerWidth: 200 });
             const size = autoSizeFontSize('Hello World', mockFont, style, 200, 100);
             expect(size).toBeGreaterThanOrEqual(1);
             expect(size).toBeLessThanOrEqual(500);
         });
 
         it('should converge: text fits at result but not at result+1', () => {
-            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, wordWrapWidth: 100 });
+            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, containerWidth: 100 });
             const size = autoSizeFontSize('Hello World Test', mockFont, style, 100, 100, 1, 64);
             // Size should be in range [1, 64]
             expect(size).toBeGreaterThanOrEqual(1);
@@ -231,7 +231,7 @@ describe('Phase 5c Layout', () => {
         });
 
         it('should respect min/max bounds', () => {
-            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, wordWrapWidth: 200 });
+            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, containerWidth: 200 });
             const size = autoSizeFontSize('Hi', mockFont, style, 200, 200, 10, 50);
             expect(size).toBeGreaterThanOrEqual(10);
             expect(size).toBeLessThanOrEqual(50);

@@ -81,7 +81,7 @@ export class TMPLayoutEngine {
 
         // Get effective wrap width considering margin and width constraint
         const getWrapWidth = (pc: ParsedChar): number => {
-            const base = pc.widthConstraint > 0 ? pc.widthConstraint : style.wordWrapWidth;
+            const base = pc.widthConstraint > 0 ? pc.widthConstraint : style.containerWidth;
             return base - pc.marginLeft - pc.marginRight - styleMarginLeft - styleMarginRight;
         };
 
@@ -111,7 +111,7 @@ export class TMPLayoutEngine {
 
             const wrapWidth = wordBuffer.length > 0
                 ? getWrapWidth(chars[wordBuffer[0].index])
-                : style.wordWrapWidth;
+                : style.containerWidth;
 
             // 5% overflow tolerance for justified/flush text
             const effectiveAlign = getAlign(chars[wordBuffer[0].index]);
@@ -634,8 +634,8 @@ export class TMPLayoutEngine {
 
         const totalHeight = cursorY + currentLineHeight - baseOffset;
 
-        // Alignment: use wordWrapWidth (container width) as reference, not widest line
-        const alignmentWidth = style.wordWrap ? style.wordWrapWidth : maxWidth;
+        // Alignment: center within containerWidth when one is set, else the widest line.
+        const alignmentWidth = style.containerWidth > 0 ? style.containerWidth : maxWidth;
         applyAlignment(lineInfos, characterInfo, alignmentWidth, styleAlign, style.wordWrappingRatios);
 
         // Overflow handling

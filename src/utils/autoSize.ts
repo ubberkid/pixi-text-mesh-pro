@@ -27,7 +27,7 @@ export function autoSizeFontSize(
     const parser = new RichTextParser();
     const testStyle = style.clone();
     testStyle.wordWrap = true;
-    testStyle.wordWrapWidth = containerWidth;
+    testStyle.containerWidth = containerWidth;
 
     let lo = min;
     let hi = max;

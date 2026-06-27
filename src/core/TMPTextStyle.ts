@@ -16,7 +16,7 @@ export interface TMPTextStyleOptions {
     verticalAlign?: VerticalAlignment;
     containerHeight?: number;
     wordWrap?: boolean;
-    wordWrapWidth?: number;
+    containerWidth?: number;
     breakWords?: boolean;
     lineHeight?: number;
     /** Additive line spacing adjustment (added to computed line height, like Unity). */
@@ -80,7 +80,7 @@ export class TMPTextStyle extends EventEmitter {
     private _verticalAlign: VerticalAlignment;
     private _containerHeight: number;
     private _wordWrap: boolean;
-    private _wordWrapWidth: number;
+    private _containerWidth: number;
     private _breakWords: boolean;
     private _lineHeight: number;
     private _lineSpacingAdjustment: number;
@@ -132,7 +132,7 @@ export class TMPTextStyle extends EventEmitter {
         this._verticalAlign = options.verticalAlign ?? 'top';
         this._containerHeight = options.containerHeight ?? 0;
         this._wordWrap = options.wordWrap ?? false;
-        this._wordWrapWidth = options.wordWrapWidth ?? 0;
+        this._containerWidth = options.containerWidth ?? 0;
         this._breakWords = options.breakWords ?? false;
         this._lineHeight = options.lineHeight ?? 0;
         this._lineSpacingAdjustment = options.lineSpacingAdjustment ?? 0;
@@ -211,8 +211,8 @@ export class TMPTextStyle extends EventEmitter {
     get wordWrap(): boolean { return this._wordWrap; }
     set wordWrap(v: boolean) { if (this._wordWrap !== v) { this._wordWrap = v; this._emitUpdate(); } }
 
-    get wordWrapWidth(): number { return this._wordWrapWidth; }
-    set wordWrapWidth(v: number) { if (this._wordWrapWidth !== v) { this._wordWrapWidth = v; this._emitUpdate(); } }
+    get containerWidth(): number { return this._containerWidth; }
+    set containerWidth(v: number) { if (this._containerWidth !== v) { this._containerWidth = v; this._emitUpdate(); } }
 
     get breakWords(): boolean { return this._breakWords; }
     set breakWords(v: boolean) { if (this._breakWords !== v) { this._breakWords = v; this._emitUpdate(); } }
@@ -347,7 +347,7 @@ export class TMPTextStyle extends EventEmitter {
             verticalAlign: this._verticalAlign,
             containerHeight: this._containerHeight,
             wordWrap: this._wordWrap,
-            wordWrapWidth: this._wordWrapWidth,
+            containerWidth: this._containerWidth,
             breakWords: this._breakWords,
             lineHeight: this._lineHeight,
             lineSpacingAdjustment: this._lineSpacingAdjustment,

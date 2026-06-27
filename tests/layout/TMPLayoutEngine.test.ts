@@ -87,7 +87,7 @@ describe('TMPLayoutEngine', () => {
     describe('word wrap', () => {
         it('should wrap words that exceed width', () => {
             // "Hello World" = 11 chars * 10px each = 110px. Wrap at 60.
-            const info = layout('Hello World', { wordWrap: true, wordWrapWidth: 60 });
+            const info = layout('Hello World', { wordWrap: true, containerWidth: 60 });
             expect(info.lineCount).toBe(2);
         });
 
@@ -211,7 +211,7 @@ describe('TMPLayoutEngine', () => {
         it('should not break inside <nobr> region', () => {
             // Without nobr, "Hello World" at wrapWidth=80 would break at the space
             // Each char is 10px wide, so "Hello" = 50px, space = 10px, "World" = 50px = 110px total
-            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, wordWrapWidth: 80 });
+            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, containerWidth: 80 });
             const parsed = parser.parse('<nobr>Hello World</nobr>', 32, 0xffffff, 'MockFont');
             const info = TMPLayoutEngine.layout(parsed, mockFont, style);
             // All chars should be on line 0 (no break allowed)
@@ -223,7 +223,7 @@ describe('TMPLayoutEngine', () => {
 
         it('should allow break outside <nobr> region', () => {
             // "AA <nobr>BB CC</nobr> DD" — break can happen before nobr or after, but not inside
-            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, wordWrapWidth: 80 });
+            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, containerWidth: 80 });
             const parsed = parser.parse('AA <nobr>BB CC</nobr> DD', 32, 0xffffff, 'MockFont');
             const info = TMPLayoutEngine.layout(parsed, mockFont, style);
             // Should have more than 1 line since total width exceeds 80
@@ -232,9 +232,9 @@ describe('TMPLayoutEngine', () => {
     });
 
     describe('width constraint', () => {
-        it('should wrap at width constraint instead of style wordWrapWidth', () => {
+        it('should wrap at width constraint instead of style containerWidth', () => {
             // Style allows 200px but <width=60> constrains to 60px
-            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, wordWrapWidth: 200 });
+            const style = new TMPTextStyle({ fontSize: 32, wordWrap: true, containerWidth: 200 });
             const parsed = parser.parse('<width=60>Hello World</width>', 32, 0xffffff, 'MockFont');
             const info = TMPLayoutEngine.layout(parsed, mockFont, style);
             // "Hello" = 50px fits in 60px, "World" = 50px would push to 110px, must wrap

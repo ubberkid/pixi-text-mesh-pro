@@ -248,7 +248,7 @@ export class TMPText extends ViewContainer {
         this._invalidateLayout();
     }
 
-    /** Enable auto-sizing: automatically adjust fontSize to fit within wordWrapWidth x containerHeight. */
+    /** Enable auto-sizing: automatically adjust fontSize to fit within containerWidth x containerHeight. */
     get enableAutoSize(): boolean { return this._enableAutoSize; }
     set enableAutoSize(value: boolean) {
         if (this._enableAutoSize === value) return;
@@ -425,12 +425,12 @@ export class TMPText extends ViewContainer {
     }
 
     private _rebuildTextInfo(): void {
-        // If wordWrap is enabled and no explicit wordWrapWidth is set,
+        // If wordWrap is enabled and no explicit containerWidth is set,
         // use the container's layout-computed width (like Unity's RectTransform).
-        if (this._style.wordWrap && this._style.wordWrapWidth <= 0) {
+        if (this._style.wordWrap && this._style.containerWidth <= 0) {
             const layout = (this as unknown as { _layout?: { computedLayout?: { width: number } } })._layout;
             if (layout?.computedLayout?.width) {
-                this._style.wordWrapWidth = layout.computedLayout.width;
+                this._style.containerWidth = layout.computedLayout.width;
             }
         }
 
@@ -449,12 +449,12 @@ export class TMPText extends ViewContainer {
         }
 
         // Auto-size: find best font size via binary search
-        if (this._enableAutoSize && this._style.wordWrapWidth > 0 && this._style.containerHeight > 0) {
+        if (this._enableAutoSize && this._style.containerWidth > 0 && this._style.containerHeight > 0) {
             const bestSize = autoSizeFontSize(
                 effectiveText,
                 this._font,
                 this._style,
-                this._style.wordWrapWidth,
+                this._style.containerWidth,
                 this._style.containerHeight,
                 this._autoSizeMin,
                 this._autoSizeMax,

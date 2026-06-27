@@ -47,7 +47,7 @@ async function main() {
             fontSize: 36,
             fill: '#ffffff',
             wordWrap: true,
-            wordWrapWidth: 600,
+            containerWidth: 600,
         },
     });
     text1.position.set(40, 40);
@@ -73,7 +73,7 @@ async function main() {
             fontSize: 28,
             fill: '#ffffff',
             wordWrap: true,
-            wordWrapWidth: 500,
+            containerWidth: 500,
         },
     });
     text3.position.set(40, 230);
@@ -101,7 +101,7 @@ async function main() {
             fontSize: 24,
             fill: '#dfe6e9',
             wordWrap: true,
-            wordWrapWidth: 500,
+            containerWidth: 500,
             align: 'left',
         },
     });
@@ -117,7 +117,7 @@ async function main() {
             fill: '#ffffff',
             align: 'center',
             wordWrap: true,
-            wordWrapWidth: 400,
+            containerWidth: 400,
         },
     });
     text6.position.set(40, 580);

@@ -332,7 +332,7 @@ const text = new TMPText({
     style: {
         fontSize: 64,
         wordWrap: true,
-        wordWrapWidth: 300,
+        containerWidth: 300,
         containerHeight: 200,
     },
 });
